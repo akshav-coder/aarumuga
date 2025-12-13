@@ -1,0 +1,15 @@
+{
+  "name": "shop-management-system",
+  "version": "1.0.0",
+  "description": "Full-stack MERN shop management system",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "seed": "cd backend && npm run seed"
+  },
+  "keywords": ["mern", "shop", "management", "inventory"],
+  "author": "",
+  "license": "ISC"
+}
+
