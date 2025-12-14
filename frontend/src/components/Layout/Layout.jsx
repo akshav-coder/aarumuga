@@ -17,6 +17,10 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
+  Menu,
+  MenuItem,
+  Avatar,
+  Chip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -25,7 +29,10 @@ import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import PeopleIcon from "@mui/icons-material/People";
 import BusinessIcon from "@mui/icons-material/Business";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LanguageSwitcher from "../common/LanguageSwitcher";
+import { useAuth } from "../../contexts/AuthContext";
 
 const drawerWidth = 240;
 
@@ -33,9 +40,16 @@ function Layout({ children }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { language } = useLanguage();
+  const { user, logout, loading: authLoading } = useAuth();
+
+  // Debug: Log user state
+  if (import.meta.env.DEV) {
+    console.log("Layout - User:", user, "Loading:", authLoading);
+  }
 
   const menuItems = [
     { text: getTranslation(language, "dashboard"), icon: <DashboardIcon />, path: "/dashboard" },
@@ -57,9 +71,36 @@ function Layout({ children }) {
     }
   };
 
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleUserMenuClose();
+    navigate("/login");
+  };
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case "admin":
+        return "error";
+      case "manager":
+        return "warning";
+      case "employee":
+        return "info";
+      default:
+        return "default";
+    }
+  };
+
   const drawer = (
-    <Box sx={{ height: "100%" }}>
-      <List sx={{ pt: 2 }}>
+    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <List sx={{ pt: 2, flexGrow: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 0.5, px: 1 }}>
             <ListItemButton
@@ -102,6 +143,35 @@ function Layout({ children }) {
           </ListItem>
         ))}
       </List>
+      {user && (
+        <>
+          <Divider />
+          <List sx={{ pb: 2 }}>
+            <ListItem disablePadding sx={{ px: 1 }}>
+              <ListItemButton
+                onClick={handleLogout}
+                sx={{
+                  borderRadius: 2,
+                  color: "error.main",
+                  "&:hover": {
+                    backgroundColor: "rgba(211, 47, 47, 0.1)",
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: "error.main" }}>
+                  <LogoutIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={getTranslation(language, "logout")}
+                  primaryTypographyProps={{
+                    fontWeight: 500,
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </>
+      )}
     </Box>
   );
 
@@ -131,11 +201,55 @@ function Layout({ children }) {
             variant="h6"
             noWrap
             component="div"
-            sx={{ fontWeight: 600, flexGrow: 1, fontSize: '1.25rem' }}
+            sx={{ fontWeight: 600, flexGrow: 1, fontSize: "1.25rem" }}
           >
-            Aarumuga - Manufacturing Management System
+            {getTranslation(language, "shopName")} - {getTranslation(language, "shopManagementSystem")}
           </Typography>
           <LanguageSwitcher />
+          {user && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: 2 }}>
+              <Chip
+                label={getTranslation(language, user.role) || user.role}
+                color={getRoleColor(user.role)}
+                size="small"
+                sx={{ fontSize: "0.875rem", fontWeight: 600 }}
+              />
+              <IconButton
+                onClick={handleUserMenuOpen}
+                sx={{ color: "white" }}
+                size="small"
+              >
+                <Avatar sx={{ width: 32, height: 32, bgcolor: "rgba(255,255,255,0.2)" }}>
+                  {user.name.charAt(0).toUpperCase()}
+                </Avatar>
+              </IconButton>
+              <Menu
+                anchorEl={userMenuAnchor}
+                open={Boolean(userMenuAnchor)}
+                onClose={handleUserMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+              >
+                <MenuItem disabled sx={{ fontSize: "1rem" }}>
+                  <AccountCircleIcon sx={{ mr: 1 }} />
+                  {user.name}
+                </MenuItem>
+                <MenuItem disabled sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
+                  {user.email}
+                </MenuItem>
+                <MenuItem onClick={handleLogout} sx={{ fontSize: "1rem" }}>
+                  <LogoutIcon sx={{ mr: 1 }} />
+                  {getTranslation(language, "logout")}
+                </MenuItem>
+              </Menu>
+            </Box>
+          )}
         </Toolbar>
       </AppBar>
 

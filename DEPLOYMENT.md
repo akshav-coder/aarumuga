@@ -45,3 +45,4 @@ Environment variables are already set:
 - Render free tier: Services may spin down after 15 minutes of inactivity. First request after spin-down may take 30-60 seconds.
 - Vercel: Automatically redeploys on git push to main branch.
 
+

@@ -33,6 +33,8 @@ export const en = {
   supplier: "Supplier",
   customer: "Customer",
   required: "Required",
+  shopName: "Aarumuga",
+  shopManagementSystem: "Manufacturing Management System",
 
   // Dashboard
   dashboardTitle: "Dashboard",
@@ -169,4 +171,34 @@ export const en = {
   failedToDelete: "Failed to delete",
   noDataAvailable: "No data available",
   startByAdding: "Start by adding your first entry",
+
+  // Authentication
+  login: "Login",
+  logout: "Logout",
+  loginToContinue: "Login to continue",
+  loggingIn: "Logging in...",
+  loginSuccess: "Login successful",
+  loginFailed: "Login failed. Please check your credentials.",
+  password: "Password",
+  email: "Email",
+  defaultCredentials: "Default Admin Credentials:",
+  admin: "Admin",
+  manager: "Manager",
+  employee: "Employee",
+  role: "Role",
+  userManagement: "User Management",
+  addUser: "Add User",
+  editUser: "Edit User",
+  deleteUser: "Delete User",
+  userName: "User Name",
+  userEmail: "Email",
+  userRole: "Role",
+  active: "Active",
+  inactive: "Inactive",
+  userCreated: "User created successfully",
+  userUpdated: "User updated successfully",
+  userDeleted: "User deleted successfully",
+  confirmDeleteUser: "Are you sure you want to delete this user?",
+  invalidCredentials: "Invalid email or password",
+  accountDeactivated: "Account is deactivated"
 };

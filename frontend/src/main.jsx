@@ -8,6 +8,7 @@ import { store } from './store/store';
 import theme from './theme/theme';
 import { ToastProvider } from './components/common/ToastProvider';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -16,9 +17,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <LanguageProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <App />
+              </ToastProvider>
+            </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
       </BrowserRouter>
