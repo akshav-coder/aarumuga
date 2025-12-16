@@ -29,7 +29,6 @@ function ProtectedRoute({ children, requiredRole = null }) {
     const roleHierarchy = {
       admin: ["admin"],
       manager: ["admin", "manager"],
-      employee: ["admin", "manager", "employee"],
     };
 
     const allowedRoles = roleHierarchy[requiredRole] || [];
@@ -42,5 +41,3 @@ function ProtectedRoute({ children, requiredRole = null }) {
 }
 
 export default ProtectedRoute;
-
-

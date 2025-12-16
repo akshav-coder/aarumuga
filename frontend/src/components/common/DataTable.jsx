@@ -12,9 +12,9 @@ import {
   Typography,
   Skeleton,
   Chip,
-} from '@mui/material';
-import InboxIcon from '@mui/icons-material/Inbox';
-import { useTranslation } from '../../hooks/useTranslation';
+} from "@mui/material";
+import InboxIcon from "@mui/icons-material/Inbox";
+import { useTranslation } from "../../hooks/useTranslation";
 
 function DataTable({
   columns,
@@ -28,7 +28,7 @@ function DataTable({
   renderActions,
 }) {
   const { t } = useTranslation();
-  
+
   const handleChangePage = (event, newPage) => {
     onPageChange(newPage);
   };
@@ -42,9 +42,18 @@ function DataTable({
     return (
       <Paper sx={{ p: 3 }}>
         <Box sx={{ mb: 2 }}>
-          <Skeleton variant="rectangular" height={40} sx={{ mb: 1, borderRadius: 2 }} />
+          <Skeleton
+            variant="rectangular"
+            height={40}
+            sx={{ mb: 1, borderRadius: 2 }}
+          />
           {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} variant="rectangular" height={56} sx={{ mb: 1, borderRadius: 2 }} />
+            <Skeleton
+              key={i}
+              variant="rectangular"
+              height={56}
+              sx={{ mb: 1, borderRadius: 2 }}
+            />
           ))}
         </Box>
       </Paper>
@@ -53,72 +62,84 @@ function DataTable({
 
   if (rows.length === 0) {
     return (
-      <Paper sx={{ p: 6, textAlign: 'center' }}>
-        <InboxIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
-        <Typography variant="h5" color="text.secondary" gutterBottom sx={{ fontSize: '1.5rem' }}>
-          {t('noDataAvailable')}
+      <Paper sx={{ p: 6, textAlign: "center" }}>
+        <InboxIcon
+          sx={{ fontSize: 64, color: "text.secondary", mb: 2, opacity: 0.5 }}
+        />
+        <Typography
+          variant="h5"
+          color="text.secondary"
+          gutterBottom
+          sx={{ fontSize: "1.5rem" }}
+        >
+          {t("noDataAvailable")}
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.125rem' }}>
-          {t('startByAdding')}
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ fontSize: "1.125rem" }}
+        >
+          {t("startByAdding")}
         </Typography>
       </Paper>
     );
   }
 
   return (
-    <Paper sx={{ overflow: 'hidden' }}>
+    <Paper sx={{ overflow: "hidden" }}>
       <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
               {columns.map((column) => (
-                <TableCell 
-                  key={column.id} 
-                  align={column.align || 'left'}
+                <TableCell
+                  key={column.id}
+                  align={column.align || "left"}
                   sx={{
-                    fontSize: '1.125rem', // 18px
+                    fontSize: "1.125rem", // 18px
                     fontWeight: 700,
-                    color: '#1a1a1a',
-                    backgroundColor: '#f8f9fa',
-                    borderBottom: '2px solid #dee2e6',
+                    color: "#1a1a1a",
+                    backgroundColor: "#f8f9fa",
+                    borderBottom: "2px solid #dee2e6",
                     py: 2.5,
+                    width: column.width || "auto",
                   }}
                 >
                   {column.label}
                 </TableCell>
               ))}
               {renderActions && (
-                <TableCell 
+                <TableCell
                   align="right"
                   sx={{
-                    fontSize: '1.125rem', // 18px
+                    fontSize: "1.125rem", // 18px
                     fontWeight: 700,
-                    color: '#1a1a1a',
-                    backgroundColor: '#f8f9fa',
-                    borderBottom: '2px solid #dee2e6',
+                    color: "#1a1a1a",
+                    backgroundColor: "#f8f9fa",
+                    borderBottom: "2px solid #dee2e6",
                     py: 2.5,
                   }}
                 >
-                  {t('actions')}
+                  {t("actions")}
                 </TableCell>
               )}
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row, index) => (
-              <TableRow 
-                key={row.id} 
+              <TableRow
+                key={row.id}
                 hover
                 sx={{
-                  '&:nth-of-type(even)': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                  "&:nth-of-type(even)": {
+                    backgroundColor: "rgba(0, 0, 0, 0.02)",
                   },
                 }}
               >
                 {columns.map((column) => (
-                  <TableCell 
-                    key={column.id} 
-                    align={column.align || 'left'}
+                  <TableCell
+                    key={column.id}
+                    align={column.align || "left"}
                     sx={{ py: 2 }}
                   >
                     {row[column.id]}
@@ -143,7 +164,7 @@ function DataTable({
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[5, 10, 25, 50]}
         sx={{
-          borderTop: '1px solid rgba(0, 0, 0, 0.05)',
+          borderTop: "1px solid rgba(0, 0, 0, 0.05)",
         }}
       />
     </Paper>
@@ -151,4 +172,3 @@ function DataTable({
 }
 
 export default DataTable;
-

@@ -8,7 +8,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { data: userData, isLoading, error } = useGetCurrentUserQuery(undefined, {
+  const {
+    data: userData,
+    isLoading,
+    error,
+  } = useGetCurrentUserQuery(undefined, {
     skip: !token,
   });
 
@@ -57,7 +61,6 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!token,
     isAdmin: user?.role === "admin",
     isManager: user?.role === "manager" || user?.role === "admin",
-    isEmployee: user?.role === "employee" || user?.role === "manager" || user?.role === "admin",
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -70,4 +73,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

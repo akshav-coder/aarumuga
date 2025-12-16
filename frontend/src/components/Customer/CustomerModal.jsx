@@ -1,25 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Box,
   TextField,
   Grid,
-} from '@mui/material';
-import Modal from '../common/Modal';
-import { useCreateCustomerMutation, useUpdateCustomerMutation } from '../../store/api/customerApi';
-import { useToast } from '../common/ToastProvider';
-import { useTranslation } from '../../hooks/useTranslation';
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
+import Modal from "../common/Modal";
+import {
+  useCreateCustomerMutation,
+  useUpdateCustomerMutation,
+} from "../../store/api/customerApi";
+import { useToast } from "../common/ToastProvider";
+import { useTranslation } from "../../hooks/useTranslation";
 
 function CustomerModal({ open, onClose, customer, onSuccess }) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    gstin: '',
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    gstin: "",
+    customerType: "retailer",
   });
 
   const { showToast } = useToast();
@@ -29,25 +37,27 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
   useEffect(() => {
     if (customer) {
       setFormData({
-        name: customer.name || '',
-        email: customer.email || '',
-        phone: customer.phone || '',
-        address: customer.address || '',
-        city: customer.city || '',
-        state: customer.state || '',
-        pincode: customer.pincode || '',
-        gstin: customer.gstin || '',
+        name: customer.name || "",
+        email: customer.email || "",
+        phone: customer.phone || "",
+        address: customer.address || "",
+        city: customer.city || "",
+        state: customer.state || "",
+        pincode: customer.pincode || "",
+        gstin: customer.gstin || "",
+        customerType: customer.customerType || "retailer",
       });
     } else {
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        state: '',
-        pincode: '',
-        gstin: '',
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+        city: "",
+        state: "",
+        pincode: "",
+        gstin: "",
+        customerType: "retailer",
       });
     }
   }, [customer, open]);
@@ -59,21 +69,21 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
 
   const handleSubmit = async () => {
     if (!formData.name) {
-      showToast(`${t('name')} ${t('required').toLowerCase()}`, 'error');
+      showToast(`${t("name")} ${t("required").toLowerCase()}`, "error");
       return;
     }
 
     try {
       if (customer) {
         await updateCustomer({ id: customer._id, ...formData }).unwrap();
-        showToast(t('customerUpdated'), 'success');
+        showToast(t("customerUpdated"), "success");
       } else {
         await createCustomer(formData).unwrap();
-        showToast(t('customerCreated'), 'success');
+        showToast(t("customerCreated"), "success");
       }
       onSuccess();
     } catch (error) {
-      showToast(error.data?.message || t('failedToSave'), 'error');
+      showToast(error.data?.message || t("failedToSave"), "error");
     }
   };
 
@@ -81,26 +91,42 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={customer ? t('editCustomer') : t('newCustomer')}
+      title={customer ? t("editCustomer") : t("newCustomer")}
       onSubmit={handleSubmit}
-      submitText={customer ? t('save') : t('add')}
+      submitText={customer ? t("save") : t("add")}
     >
       <Box sx={{ pt: 2 }}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('name')}
+              label={t("name")}
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth required>
+              <InputLabel>{t("customerType")}</InputLabel>
+              <Select
+                value={formData.customerType}
+                label={t("customerType")}
+                onChange={(e) =>
+                  setFormData({ ...formData, customerType: e.target.value })
+                }
+              >
+                <MenuItem value="retailer">{t("retailer")}</MenuItem>
+                <MenuItem value="wholesaler">{t("wholesaler")}</MenuItem>
+                <MenuItem value="both">{t("both")}</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label={t('email')}
+              label={t("email")}
               name="email"
               type="email"
               value={formData.email}
@@ -110,7 +136,7 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('phone')}
+              label={t("phone")}
               name="phone"
               value={formData.phone}
               onChange={handleChange}
@@ -119,7 +145,7 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('gstin')}
+              label={t("gstin")}
               name="gstin"
               value={formData.gstin}
               onChange={handleChange}
@@ -129,7 +155,7 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('address')}
+              label={t("address")}
               name="address"
               value={formData.address}
               onChange={handleChange}
@@ -140,7 +166,7 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('city')}
+              label={t("city")}
               name="city"
               value={formData.city}
               onChange={handleChange}
@@ -149,7 +175,7 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('state')}
+              label={t("state")}
               name="state"
               value={formData.state}
               onChange={handleChange}
@@ -158,7 +184,7 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label={t('pincode')}
+              label={t("pincode")}
               name="pincode"
               value={formData.pincode}
               onChange={handleChange}
@@ -171,4 +197,3 @@ function CustomerModal({ open, onClose, customer, onSuccess }) {
 }
 
 export default CustomerModal;
-

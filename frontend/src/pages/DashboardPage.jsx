@@ -74,7 +74,14 @@ function DashboardPage() {
       totalOutstanding,
       outstandingSales: outstandingData?.sales?.slice(0, 5) || [],
     };
-  }, [purchasesData, salesData, stockData, customersData, suppliersData, outstandingData]);
+  }, [
+    purchasesData,
+    salesData,
+    stockData,
+    customersData,
+    suppliersData,
+    outstandingData,
+  ]);
 
   const recentPurchases = purchasesData?.purchases?.slice(0, 5) || [];
   const recentSales = salesData?.sales?.slice(0, 5) || [];
@@ -393,7 +400,12 @@ function DashboardPage() {
         </Grid>
 
         <Grid item xs={12} sm={6} md={4}>
-          <Card sx={{ background: stats.totalOutstanding > 0 ? '#f59e0b' : '#10b981', color: 'white' }}>
+          <Card
+            sx={{
+              background: stats.totalOutstanding > 0 ? "#f59e0b" : "#10b981",
+              color: "white",
+            }}
+          >
             <CardContent>
               <Box
                 display="flex"
@@ -403,7 +415,12 @@ function DashboardPage() {
                 <Box>
                   <Typography
                     variant="body1"
-                    sx={{ opacity: 0.9, mb: 1, fontSize: "1.125rem", fontWeight: 500 }}
+                    sx={{
+                      opacity: 0.9,
+                      mb: 1,
+                      fontSize: "1.125rem",
+                      fontWeight: 500,
+                    }}
                   >
                     {t("outstandingPayments")}
                   </Typography>
@@ -411,7 +428,8 @@ function DashboardPage() {
                     variant="h4"
                     sx={{ fontWeight: 700, fontSize: "2rem" }}
                   >
-                    ₹{stats.totalOutstanding.toLocaleString("en-IN", {
+                    ₹
+                    {stats.totalOutstanding.toLocaleString("en-IN", {
                       maximumFractionDigits: 0,
                     })}
                   </Typography>
@@ -451,12 +469,17 @@ function DashboardPage() {
 
       {/* Outstanding Payments Alert */}
       {stats.totalOutstanding > 0 && (
-        <Alert severity="warning" sx={{ mb: 3, fontSize: "1.125rem" }} icon={<AttachMoneyIcon />}>
+        <Alert
+          severity="warning"
+          sx={{ mb: 3, fontSize: "1.125rem" }}
+          icon={<AttachMoneyIcon />}
+        >
           <Typography
             variant="body1"
             sx={{ fontWeight: 600, mb: 1.5, fontSize: "1.25rem" }}
           >
-            {t("outstandingPayments")}: ₹{stats.totalOutstanding.toLocaleString("en-IN", {
+            {t("outstandingPayments")}: ₹
+            {stats.totalOutstanding.toLocaleString("en-IN", {
               maximumFractionDigits: 0,
             })}
           </Typography>
@@ -465,7 +488,9 @@ function DashboardPage() {
               {stats.outstandingSales.map((sale) => (
                 <li key={sale._id} style={{ marginBottom: "8px" }}>
                   <Typography variant="body1" sx={{ fontSize: "1.125rem" }}>
-                    {sale.customer}: ₹{(sale.outstandingAmount || sale.total).toFixed(2)} ({dayjs(sale.date).format("DD/MM/YYYY")})
+                    {sale.customer}: ₹
+                    {(sale.outstandingAmount || sale.total).toFixed(2)} (
+                    {dayjs(sale.date).format("DD/MM/YYYY")})
                   </Typography>
                 </li>
               ))}

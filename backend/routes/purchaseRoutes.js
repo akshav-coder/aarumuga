@@ -1,19 +1,20 @@
-import express from 'express';
+import express from "express";
 import {
   getPurchases,
   getPurchase,
   createPurchase,
   updatePurchase,
-  deletePurchase
-} from '../controllers/purchaseController.js';
+  deletePurchase,
+  bulkDeletePurchases,
+} from "../controllers/purchaseController.js";
 
 const router = express.Router();
 
-router.get('/', getPurchases);
-router.get('/:id', getPurchase);
-router.post('/', createPurchase);
-router.put('/:id', updatePurchase);
-router.delete('/:id', deletePurchase);
+router.get("/", getPurchases);
+router.get("/:id", getPurchase);
+router.post("/", createPurchase);
+router.put("/:id", updatePurchase);
+router.delete("/:id", deletePurchase);
+router.post("/bulk-delete", bulkDeletePurchases);
 
 export default router;
-

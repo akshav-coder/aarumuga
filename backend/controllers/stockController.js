@@ -1,32 +1,14 @@
-import Stock from '../models/Stock.js';
+import Stock from "../models/Stock.js";
 
-// Get all stock
+// Get stock (single item - Tamarind Paste)
 export const getStock = async (req, res) => {
   try {
-    const { search, lowStock, page = 1, limit = 100 } = req.query;
-    const query = {};
-
-    if (search) {
-      query.itemName = { $regex: search, $options: 'i' };
-    }
-
-    if (lowStock === 'true') {
-      query.$expr = { $lte: ['$quantity', '$lowStockThreshold'] };
-    }
-
-    const stock = await Stock.find(query)
-      .sort({ itemName: 1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .exec();
-
-    const total = await Stock.countDocuments(query);
-
+    const stock = await Stock.getStock();
     res.json({
-      stock,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total
+      stock: [stock],
+      totalPages: 1,
+      currentPage: 1,
+      total: 1,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -36,10 +18,7 @@ export const getStock = async (req, res) => {
 // Get single stock item
 export const getStockItem = async (req, res) => {
   try {
-    const stock = await Stock.findOne({ itemName: req.params.itemName });
-    if (!stock) {
-      return res.status(404).json({ message: 'Stock item not found' });
-    }
+    const stock = await Stock.getStock();
     res.json(stock);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -49,22 +28,23 @@ export const getStockItem = async (req, res) => {
 // Update stock manually (admin adjustment)
 export const updateStock = async (req, res) => {
   try {
-    const { itemName, quantity, unit, lowStockThreshold } = req.body;
+    const { quantity, unit, lowStockThreshold } = req.body;
 
     if (quantity !== undefined && quantity < 0) {
-      return res.status(400).json({ message: 'Quantity cannot be negative' });
+      return res.status(400).json({ message: "Quantity cannot be negative" });
     }
 
     const updateData = {
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
+      unit: "kg", // Always kg for Tamarind Paste
     };
 
     if (quantity !== undefined) updateData.quantity = quantity;
-    if (unit) updateData.unit = unit;
-    if (lowStockThreshold !== undefined) updateData.lowStockThreshold = lowStockThreshold;
+    if (lowStockThreshold !== undefined)
+      updateData.lowStockThreshold = lowStockThreshold;
 
     const stock = await Stock.findOneAndUpdate(
-      { itemName },
+      { itemName: "Tamarind Paste" },
       { $set: updateData },
       { new: true, upsert: true }
     );
@@ -78,25 +58,22 @@ export const updateStock = async (req, res) => {
 // Adjust stock (add or subtract)
 export const adjustStock = async (req, res) => {
   try {
-    const { itemName, adjustment, unit, reason } = req.body;
+    const { adjustment, unit, reason } = req.body;
 
-    if (!itemName || adjustment === undefined) {
-      return res.status(400).json({ message: 'Item name and adjustment are required' });
+    if (adjustment === undefined) {
+      return res.status(400).json({ message: "Adjustment amount is required" });
     }
 
-    const stock = await Stock.findOne({ itemName });
-    if (!stock) {
-      return res.status(404).json({ message: 'Stock item not found' });
-    }
+    const stock = await Stock.getStock();
 
     const newQuantity = stock.quantity + adjustment;
     if (newQuantity < 0) {
-      return res.status(400).json({ message: 'Stock cannot be negative' });
+      return res.status(400).json({ message: "Stock cannot be negative" });
     }
 
     stock.quantity = newQuantity;
     stock.lastUpdated = new Date();
-    if (unit) stock.unit = unit;
+    stock.unit = "kg"; // Always kg for Tamarind Paste
 
     await stock.save();
 
@@ -106,16 +83,15 @@ export const adjustStock = async (req, res) => {
   }
 };
 
-// Delete stock item
+// Delete stock item (reset to 0)
 export const deleteStock = async (req, res) => {
   try {
-    const stock = await Stock.findOneAndDelete({ itemName: req.params.itemName });
-    if (!stock) {
-      return res.status(404).json({ message: 'Stock item not found' });
-    }
-    res.json({ message: 'Stock item deleted successfully' });
+    const stock = await Stock.getStock();
+    stock.quantity = 0;
+    stock.lastUpdated = new Date();
+    await stock.save();
+    res.json({ message: "Stock reset successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-

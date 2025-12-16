@@ -3,9 +3,13 @@ import jwt from "jsonwebtoken";
 
 // Generate JWT Token
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || "your-secret-key-change-in-production", {
-    expiresIn: "30d",
-  });
+  return jwt.sign(
+    { userId },
+    process.env.JWT_SECRET || "your-secret-key-change-in-production",
+    {
+      expiresIn: "30d",
+    }
+  );
 };
 
 // Register new user (Admin only)
@@ -14,13 +18,17 @@ export const register = async (req, res) => {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Name, email, and password are required" });
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists with this email" });
+      return res
+        .status(400)
+        .json({ message: "User already exists with this email" });
     }
 
     // Create new user
@@ -28,7 +36,7 @@ export const register = async (req, res) => {
       name,
       email,
       password,
-      role: role || "employee",
+      role: role || "manager",
     });
 
     await user.save();
@@ -56,7 +64,9 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
 
     // Find user
@@ -165,5 +175,3 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-

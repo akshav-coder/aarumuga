@@ -1,19 +1,18 @@
-import express from 'express';
+import express from "express";
 import {
   getStock,
   getStockItem,
   updateStock,
   adjustStock,
-  deleteStock
-} from '../controllers/stockController.js';
+  deleteStock,
+} from "../controllers/stockController.js";
 
 const router = express.Router();
 
-router.get('/', getStock);
-router.get('/:itemName', getStockItem);
-router.put('/:itemName', updateStock);
-router.patch('/adjust', adjustStock);
-router.delete('/:itemName', deleteStock);
+router.get("/", getStock);
+router.get("/current", getStockItem);
+router.put("/", updateStock);
+router.patch("/adjust", adjustStock);
+router.delete("/", deleteStock);
 
 export default router;
-

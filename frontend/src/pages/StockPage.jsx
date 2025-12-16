@@ -1,41 +1,26 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Box,
   Button,
   Card,
   CardContent,
-  TextField,
   Typography,
   Chip,
   Grid,
-  InputAdornment,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import WarningIcon from '@mui/icons-material/Warning';
-import DataTable from '../components/common/DataTable';
-import StockAdjustModal from '../components/Stock/StockAdjustModal';
-import { useGetStockQuery } from '../store/api/stockApi';
-import { useToast } from '../components/common/ToastProvider';
-import { useTranslation } from '../hooks/useTranslation';
-import dayjs from 'dayjs';
+  CircularProgress,
+} from "@mui/material";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import StockAdjustModal from "../components/Stock/StockAdjustModal";
+import { useGetStockQuery } from "../store/api/stockApi";
+import { useTranslation } from "../hooks/useTranslation";
+import dayjs from "dayjs";
 
 function StockPage() {
   const { t } = useTranslation();
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(100);
-  const [search, setSearch] = useState('');
-  const [lowStockFilter, setLowStockFilter] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingStock, setEditingStock] = useState(null);
 
-  const { showToast } = useToast();
-  const { data, isLoading, refetch } = useGetStockQuery({
-    page: page + 1,
-    limit: rowsPerPage,
-    search,
-    lowStock: lowStockFilter,
-  });
+  const { data, isLoading, refetch } = useGetStockQuery();
 
   const handleOpenModal = (stock) => {
     setEditingStock(stock);
@@ -47,147 +32,130 @@ function StockPage() {
     setEditingStock(null);
   };
 
-  const isLowStock = (stock) => {
-    return stock.quantity <= stock.lowStockThreshold;
-  };
-
-  const columns = [
-    { id: 'itemName', label: t('itemName') },
-    { id: 'quantity', label: t('currentQuantity') },
-    { id: 'unit', label: t('unit') },
-    { id: 'lastUpdated', label: t('lastUpdated') },
-    { id: 'status', label: t('status') },
-  ];
-
-  const rows = (data?.stock || []).map((stock) => ({
-    id: stock._id || stock.itemName,
-    itemName: stock.itemName,
-    quantity: (
-      <Box>
-        <Typography
-          component="span"
-          sx={{
-            color: isLowStock(stock) ? 'error.main' : 'text.primary',
-            fontWeight: isLowStock(stock) ? 'bold' : 'normal',
-          }}
-        >
-          {stock.quantity}
-        </Typography>
-      </Box>
-    ),
-    unit: stock.unit,
-    lastUpdated: dayjs(stock.lastUpdated).format('DD/MM/YYYY HH:mm'),
-    status: isLowStock(stock) ? (
-      <Chip label={t('lowStock')} color="error" size="small" />
-    ) : (
-      <Chip label={t('inStock')} color="success" size="small" />
-    ),
-    original: stock,
-  }));
-
-  const totalItems = data?.total || 0;
-  const lowStockItems = data?.stock?.filter(item => item.quantity <= item.lowStockThreshold).length || 0;
+  const stock = data?.stock?.[0] || null;
+  // Always use "kg" for Tamarind Paste
+  const stockUnit = stock?.unit || "kg";
+  const isLow = stock ? stock.quantity <= stock.lowStockThreshold : false;
 
   return (
     <Box>
       <Box mb={4}>
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, fontSize: '2rem' }}>
-          {t('stockTitle')}
+        <Typography
+          variant="h3"
+          sx={{ fontWeight: 700, mb: 1, fontSize: "2rem" }}
+        >
+          {t("stockTitle")}
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ fontSize: '1.125rem' }}>
-          {t('stockSubtitle')}
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ fontSize: "1.125rem" }}
+        >
+          {t("stockSubtitle")}
         </Typography>
       </Box>
 
+      {stock && (
       <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: '#667eea', color: 'white' }}>
+          <Grid item xs={12} md={6}>
+            <Card
+              sx={{ background: isLow ? "#f5576c" : "#667eea", color: "white" }}
+            >
             <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                 <Box>
-                  <Typography variant="body1" sx={{ opacity: 0.9, mb: 1.5, fontSize: '1.125rem', fontWeight: 500 }}>
-                    {t('stockItems')}
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        opacity: 0.9,
+                        mb: 1.5,
+                        fontSize: "1.125rem",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {stock.itemName}
+                    </Typography>
+                    <Typography
+                      variant="h3"
+                      sx={{ fontWeight: 700, fontSize: "2.5rem", mb: 1 }}
+                    >
+                      {stock.quantity} kg
                   </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 700, fontSize: '2.5rem' }}>
-                    {totalItems}
+                    <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                      {t("lastUpdated")}:{" "}
+                      {dayjs(stock.lastUpdated).format("DD/MM/YYYY HH:mm")}
                   </Typography>
+                    {isLow && (
+                      <Chip
+                        label={t("lowStock")}
+                        color="error"
+                        size="small"
+                        sx={{
+                          mt: 1,
+                          bgcolor: "rgba(255,255,255,0.2)",
+                          color: "white",
+                        }}
+                      />
+                    )}
                 </Box>
-                <InventoryIcon sx={{ fontSize: 48, opacity: 0.8 }} />
+                  <InventoryIcon sx={{ fontSize: 60, opacity: 0.8 }} />
               </Box>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ background: '#f5576c', color: 'white' }}>
+          <Grid item xs={12} md={6}>
+            <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography variant="body1" sx={{ opacity: 0.9, mb: 1.5, fontSize: '1.125rem', fontWeight: 500 }}>
-                    {t('lowStockItems')}
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  {t("stockDetails")}
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("lowStockThreshold")}
                   </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 700, fontSize: '2.5rem' }}>
-                    {lowStockItems}
+                  <Typography variant="h6">
+                    {stock.lowStockThreshold} kg
                   </Typography>
                 </Box>
-                <WarningIcon sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Box>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => handleOpenModal(stock)}
+                  size="large"
+                  sx={{ mt: 2 }}
+                >
+                  {t("adjustStock")}
+                </Button>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
+      )}
 
-      <Card sx={{ mb: 3 }}>
+      {isLoading && (
+        <Box display="flex" justifyContent="center" p={4}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {!isLoading && !stock && (
+        <Card>
         <CardContent>
-          <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-            <TextField
-              placeholder={t('searchStock')}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: 'text.secondary' }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ flexGrow: 1, minWidth: 200, '& .MuiOutlinedInput-root': { bgcolor: 'background.paper' } }}
-            />
-            <Button
-              variant={lowStockFilter ? 'contained' : 'outlined'}
-              onClick={() => {
-                setLowStockFilter(!lowStockFilter);
-                setPage(0);
-              }}
-              startIcon={<WarningIcon />}
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              align="center"
+              sx={{ py: 4 }}
             >
-              {lowStockFilter ? t('showAll') : t('showLowStockOnly')}
-            </Button>
-          </Box>
+              {t("noDataAvailable")}
+            </Typography>
         </CardContent>
       </Card>
-
-      <DataTable
-        columns={columns}
-        rows={rows}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        totalRows={data?.total || 0}
-        onPageChange={setPage}
-        onRowsPerPageChange={setRowsPerPage}
-        loading={isLoading}
-        renderActions={(row) => (
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => handleOpenModal(row.original)}
-          >
-            {t('adjustStock')}
-          </Button>
         )}
-      />
 
       <StockAdjustModal
         open={modalOpen}
@@ -203,4 +171,3 @@ function StockPage() {
 }
 
 export default StockPage;
-

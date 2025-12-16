@@ -1,32 +1,32 @@
-import { apiSlice } from './apiSlice';
+import { apiSlice } from "./apiSlice";
 
 export const paymentApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     recordPayment: builder.mutation({
       query: (data) => ({
-        url: '/payments',
-        method: 'POST',
+        url: "/payments",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Payment', 'Sales'],
+      invalidatesTags: ["Payment", "Sales"],
     }),
     getOutstandingPayments: builder.query({
-      query: (customer) => ({
-        url: '/payments/outstanding',
+      query: (customer = "") => ({
+        url: "/payments/outstanding",
         params: customer ? { customer } : {},
       }),
-      providesTags: ['Payment'],
+      providesTags: ["Payment"],
     }),
     getPaymentsBySale: builder.query({
       query: (saleId) => `/payments/sale/${saleId}`,
-      providesTags: ['Payment'],
+      providesTags: ["Payment"],
     }),
     deletePayment: builder.mutation({
       query: (id) => ({
         url: `/payments/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Payment', 'Sales'],
+      invalidatesTags: ["Payment", "Sales"],
     }),
   }),
 });
@@ -37,4 +37,3 @@ export const {
   useGetPaymentsBySaleQuery,
   useDeletePaymentMutation,
 } = paymentApi;
-

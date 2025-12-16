@@ -1,40 +1,48 @@
-import { apiSlice } from './apiSlice';
+import { apiSlice } from "./apiSlice";
 
 export const purchaseApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getPurchases: builder.query({
-      query: ({ page = 1, limit = 10, search = '' } = {}) => ({
-        url: '/purchases',
+      query: ({ page = 1, limit = 10, search = "" } = {}) => ({
+        url: "/purchases",
         params: { page, limit, search },
       }),
-      providesTags: ['Purchase'],
+      providesTags: ["Purchase"],
     }),
     getPurchase: builder.query({
       query: (id) => `/purchases/${id}`,
-      providesTags: (result, error, id) => [{ type: 'Purchase', id }],
+      providesTags: (result, error, id) => [{ type: "Purchase", id }],
     }),
     createPurchase: builder.mutation({
       query: (data) => ({
-        url: '/purchases',
-        method: 'POST',
+        url: "/purchases",
+        method: "POST",
         body: data,
       }),
-      invalidatesTags: ['Purchase', 'Stock'],
+      invalidatesTags: ["Purchase", "Stock"],
     }),
     updatePurchase: builder.mutation({
       query: ({ id, ...data }) => ({
         url: `/purchases/${id}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
       }),
-      invalidatesTags: ['Purchase', 'Stock'],
+      invalidatesTags: ["Purchase", "Stock"],
     }),
     deletePurchase: builder.mutation({
       query: (id) => ({
         url: `/purchases/${id}`,
-        method: 'DELETE',
+        method: "DELETE",
       }),
-      invalidatesTags: ['Purchase', 'Stock'],
+      invalidatesTags: ["Purchase", "Stock"],
+    }),
+    bulkDeletePurchases: builder.mutation({
+      query: (ids) => ({
+        url: "/purchases/bulk-delete",
+        method: "POST",
+        body: { ids },
+      }),
+      invalidatesTags: ["Purchase", "Stock"],
     }),
   }),
 });
@@ -45,5 +53,5 @@ export const {
   useCreatePurchaseMutation,
   useUpdatePurchaseMutation,
   useDeletePurchaseMutation,
+  useBulkDeletePurchasesMutation,
 } = purchaseApi;
-

@@ -1,19 +1,20 @@
-import express from 'express';
+import express from "express";
 import {
   getSales,
   getSale,
   createSale,
   updateSale,
-  deleteSale
-} from '../controllers/salesController.js';
+  deleteSale,
+  bulkDeleteSales,
+} from "../controllers/salesController.js";
 
 const router = express.Router();
 
-router.get('/', getSales);
-router.get('/:id', getSale);
-router.post('/', createSale);
-router.put('/:id', updateSale);
-router.delete('/:id', deleteSale);
+router.get("/", getSales);
+router.get("/:id", getSale);
+router.post("/", createSale);
+router.put("/:id", updateSale);
+router.delete("/:id", deleteSale);
+router.post("/bulk-delete", bulkDeleteSales);
 
 export default router;
-

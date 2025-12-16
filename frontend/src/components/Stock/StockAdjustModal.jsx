@@ -49,7 +49,6 @@ function StockAdjustModal({ open, onClose, stock, onSuccess }) {
           return;
         }
         await updateStock({
-          itemName: stock.itemName,
           quantity: qty,
         }).unwrap();
         showToast(t("purchaseUpdated"), "success");
@@ -60,7 +59,6 @@ function StockAdjustModal({ open, onClose, stock, onSuccess }) {
           return;
         }
         await adjustStock({
-          itemName: stock.itemName,
           adjustment: adj,
         }).unwrap();
         showToast(
@@ -98,9 +96,7 @@ function StockAdjustModal({ open, onClose, stock, onSuccess }) {
               <Typography variant="body2" color="text.secondary">
                 {t("currentStock")}
               </Typography>
-              <Typography variant="h6">
-                {stock.quantity} {stock.unit}
-              </Typography>
+              <Typography variant="h6">{stock.quantity} kg</Typography>
             </Box>
           </Grid>
 
@@ -158,8 +154,7 @@ function StockAdjustModal({ open, onClose, stock, onSuccess }) {
                 {t("newStockQuantity")}
               </Typography>
               <Typography variant="h6" color="primary.contrastText">
-                {newQuantity >= 0 ? newQuantity.toFixed(2) : "Invalid"}{" "}
-                {stock.unit}
+                {newQuantity >= 0 ? newQuantity.toFixed(2) : "Invalid"} kg
               </Typography>
             </Box>
           </Grid>

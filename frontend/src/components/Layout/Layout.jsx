@@ -29,6 +29,7 @@ import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import PeopleIcon from "@mui/icons-material/People";
 import BusinessIcon from "@mui/icons-material/Business";
+import PaymentIcon from "@mui/icons-material/Payment";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LanguageSwitcher from "../common/LanguageSwitcher";
@@ -52,12 +53,46 @@ function Layout({ children }) {
   }
 
   const menuItems = [
-    { text: getTranslation(language, "dashboard"), icon: <DashboardIcon />, path: "/dashboard" },
-    { text: getTranslation(language, "purchases"), icon: <ShoppingCartIcon />, path: "/purchases" },
-    { text: getTranslation(language, "sales"), icon: <PointOfSaleIcon />, path: "/sales" },
-    { text: getTranslation(language, "stock"), icon: <InventoryIcon />, path: "/stock" },
-    { text: getTranslation(language, "customers"), icon: <PeopleIcon />, path: "/customers" },
-    { text: getTranslation(language, "suppliers"), icon: <BusinessIcon />, path: "/suppliers" },
+    {
+      text: getTranslation(language, "dashboard"),
+      icon: <DashboardIcon />,
+      path: "/dashboard",
+    },
+    {
+      text: getTranslation(language, "purchases"),
+      icon: <ShoppingCartIcon />,
+      path: "/purchases",
+    },
+    {
+      text: getTranslation(language, "sales"),
+      icon: <PointOfSaleIcon />,
+      path: "/sales",
+    },
+    {
+      text: getTranslation(language, "stock"),
+      icon: <InventoryIcon />,
+      path: "/stock",
+    },
+    {
+      text: getTranslation(language, "customers"),
+      icon: <PeopleIcon />,
+      path: "/customers",
+    },
+    {
+      text: getTranslation(language, "suppliers"),
+      icon: <BusinessIcon />,
+      path: "/suppliers",
+    },
+    {
+      text: getTranslation(language, "payments"),
+      icon: <PaymentIcon />,
+      path: "/payments",
+    },
+    {
+      text: getTranslation(language, "supplierPayments"),
+      icon: <PaymentIcon />,
+      path: "/supplier-payments",
+    },
   ];
 
   const handleDrawerToggle = () => {
@@ -203,7 +238,8 @@ function Layout({ children }) {
             component="div"
             sx={{ fontWeight: 600, flexGrow: 1, fontSize: "1.25rem" }}
           >
-            {getTranslation(language, "shopName")} - {getTranslation(language, "shopManagementSystem")}
+            {getTranslation(language, "shopName")} -{" "}
+            {getTranslation(language, "shopManagementSystem")}
           </Typography>
           <LanguageSwitcher />
           {user && (
@@ -219,7 +255,13 @@ function Layout({ children }) {
                 sx={{ color: "white" }}
                 size="small"
               >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: "rgba(255,255,255,0.2)" }}>
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: "rgba(255,255,255,0.2)",
+                  }}
+                >
                   {user.name.charAt(0).toUpperCase()}
                 </Avatar>
               </IconButton>
@@ -240,7 +282,10 @@ function Layout({ children }) {
                   <AccountCircleIcon sx={{ mr: 1 }} />
                   {user.name}
                 </MenuItem>
-                <MenuItem disabled sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
+                <MenuItem
+                  disabled
+                  sx={{ fontSize: "0.875rem", color: "text.secondary" }}
+                >
                   {user.email}
                 </MenuItem>
                 <MenuItem onClick={handleLogout} sx={{ fontSize: "1rem" }}>
