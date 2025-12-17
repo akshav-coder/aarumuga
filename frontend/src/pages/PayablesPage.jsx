@@ -27,10 +27,15 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import HistoryIcon from "@mui/icons-material/History";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import {
   useGetPayablesSummaryQuery,
   useGetSupplierPayablesQuery,
   useUpdatePayablesPaymentMutation,
+  useGetSupplierPaymentHistoryQuery,
 } from "../store/api/payableApi";
 import { useGetSuppliersQuery } from "../store/api/supplierApi";
 import { useToast } from "../components/common/ToastProvider";
@@ -47,6 +52,8 @@ function PayablesPage() {
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const [payAmount, setPayAmount] = useState("");
   const [distributedPayments, setDistributedPayments] = useState({});
+  const [historyMode, setHistoryMode] = useState(false);
+  const [selectedHistoryPayment, setSelectedHistoryPayment] = useState(null);
 
   // Fetch payables summary
   const { data: summaryData, refetch: refetchSummary } =
@@ -56,10 +63,16 @@ function PayablesPage() {
   const { data: suppliersData } = useGetSuppliersQuery({ limit: 1000 });
   const suppliers = suppliersData?.suppliers || [];
 
-  // Fetch supplier payables when supplier is selected
+  // Fetch supplier payables when supplier is selected (always fetch if supplier selected, even in history mode when viewing details)
   const { data: supplierPayablesData, refetch: refetchSupplierPayables } =
     useGetSupplierPayablesQuery(selectedSupplier, {
       skip: !selectedSupplier,
+    });
+
+  // Fetch payment history when in history mode
+  const { data: paymentHistoryData, refetch: refetchPaymentHistory } =
+    useGetSupplierPaymentHistoryQuery(selectedSupplier, {
+      skip: !selectedSupplier || !historyMode,
     });
 
   const [updatePayment, { isLoading: isUpdating }] =
@@ -121,9 +134,56 @@ function PayablesPage() {
     setDistributedPayments(calculatedDistribution);
   }, [calculatedDistribution]);
 
+  // Refetch data when history mode or supplier changes
+  useEffect(() => {
+    if (selectedSupplier) {
+      if (historyMode) {
+        refetchPaymentHistory();
+      } else {
+        refetchSupplierPayables();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyMode, selectedSupplier]);
+
   const handleSupplierChange = (event) => {
     const supplier = event.target.value;
     setSelectedSupplier(supplier);
+    setPayAmount("");
+    setDistributedPayments({});
+    setSelectedHistoryPayment(null);
+  };
+
+  const handleHistoryModeToggle = (event, newMode) => {
+    if (newMode !== null) {
+      setHistoryMode(newMode);
+      setSelectedHistoryPayment(null);
+      setPayAmount("");
+      setDistributedPayments({});
+      // useEffect will handle refetching when historyMode changes
+    }
+  };
+
+  const handleHistoryPaymentClick = (payment) => {
+    setSelectedHistoryPayment(payment);
+    // Set the pay amount and distribution from history
+    const totalAmount = payment.totalAmount;
+    setPayAmount(formatIndianNumber(totalAmount));
+
+    // Create distribution object from history
+    const distribution = {};
+    payment.distributions.forEach((dist) => {
+      distribution[dist.purchaseId] = {
+        purchaseId: dist.purchaseId,
+        paidAmount: dist.paidAmount,
+        originalOutstanding: dist.totalAmount - dist.paidAmount,
+      };
+    });
+    setDistributedPayments(distribution);
+  };
+
+  const handleBackFromHistory = () => {
+    setSelectedHistoryPayment(null);
     setPayAmount("");
     setDistributedPayments({});
   };
@@ -173,6 +233,9 @@ function PayablesPage() {
       setDistributedPayments({});
       refetchSummary();
       refetchSupplierPayables();
+      if (historyMode) {
+        refetchPaymentHistory();
+      }
     } catch (error) {
       showToast(error.data?.message || t("failedToSave"), "error");
     }
@@ -385,7 +448,32 @@ function PayablesPage() {
       {/* Payment Section */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Grid container spacing={3} alignItems="center">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {historyMode ? t("paymentHistory") : t("makePayment")}
+            </Typography>
+            <ToggleButtonGroup
+              value={historyMode}
+              exclusive
+              onChange={handleHistoryModeToggle}
+              aria-label="payment mode"
+            >
+              <ToggleButton value={false} aria-label="payment mode">
+                {t("makePayment")}
+              </ToggleButton>
+              <ToggleButton value={true} aria-label="history mode">
+                <HistoryIcon sx={{ mr: 1 }} />
+                {t("history")}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          <Grid container spacing={3} alignItems="flex-start">
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
                 <InputLabel>{t("supplier")}</InputLabel>
@@ -406,49 +494,53 @@ function PayablesPage() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label={t("payAmount")}
-                value={payAmount}
-                onChange={handlePayAmountChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">₹</InputAdornment>
-                  ),
-                }}
-                helperText={t("payAmountHelper")}
-                placeholder="0"
-              />
-            </Grid>
+            {!historyMode && (
+              <>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label={t("payAmount")}
+                    value={payAmount}
+                    onChange={handlePayAmountChange}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">₹</InputAdornment>
+                      ),
+                    }}
+                    helperText={t("payAmountHelper")}
+                    placeholder="0"
+                  />
+                </Grid>
 
-            <Grid item xs={12} md={4}>
-              <Button
-                fullWidth
-                variant="contained"
-                size="large"
-                startIcon={<PaymentIcon />}
-                onClick={handlePay}
-                disabled={
-                  !selectedSupplier ||
-                  !payAmount ||
-                  payAmountNum <= 0 ||
-                  Object.keys(distributedPayments).length === 0 ||
-                  isUpdating
-                }
-                sx={{
-                  height: "56px",
-                  fontSize: "1.125rem",
-                  fontWeight: 600,
-                }}
-              >
-                {isUpdating ? t("processing") : t("pay")}
-              </Button>
-            </Grid>
+                <Grid item xs={12} md={4}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    startIcon={<PaymentIcon />}
+                    onClick={handlePay}
+                    disabled={
+                      !selectedSupplier ||
+                      !payAmount ||
+                      payAmountNum <= 0 ||
+                      Object.keys(distributedPayments).length === 0 ||
+                      isUpdating
+                    }
+                    sx={{
+                      height: "56px",
+                      fontSize: "1.125rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isUpdating ? t("processing") : t("pay")}
+                  </Button>
+                </Grid>
+              </>
+            )}
           </Grid>
 
           {/* Distribution Summary */}
-          {Object.keys(distributedPayments).length > 0 && (
+          {Object.keys(distributedPayments).length > 0 && !historyMode && (
             <Box mt={3} p={2} bgcolor="info.light" borderRadius={2}>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
                 {t("billsSelected")}: {Object.keys(distributedPayments).length}
@@ -473,10 +565,45 @@ function PayablesPage() {
               )}
             </Box>
           )}
+
+          {/* Historical Payment Summary */}
+          {historyMode && selectedHistoryPayment && (
+            <Box mt={3} p={2} bgcolor="success.light" borderRadius={2}>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={1}
+              >
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {t("paymentDate")}:{" "}
+                  {dayjs(selectedHistoryPayment.paymentDate).format(
+                    "DD/MM/YYYY"
+                  )}
+                </Typography>
+                <Button
+                  size="small"
+                  startIcon={<ArrowBackIcon />}
+                  onClick={handleBackFromHistory}
+                >
+                  {t("back")}
+                </Button>
+              </Box>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                {t("totalPayment")}: ₹
+                {selectedHistoryPayment.totalAmount.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {t("billsPaid")}: {selectedHistoryPayment.distributions.length}
+              </Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
 
-      {/* Bills Table */}
+      {/* Bills Table or Payment History */}
       <Card>
         <CardContent>
           {!selectedSupplier ? (
@@ -489,6 +616,253 @@ function PayablesPage() {
                 {t("selectSupplierToViewBillsDescription")}
               </Typography>
             </Box>
+          ) : historyMode ? (
+            // Payment History View
+            paymentHistoryData?.payments?.length === 0 ? (
+              <Box textAlign="center" py={8} sx={{ color: "text.secondary" }}>
+                <HistoryIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+                <Typography variant="h6">{t("noPaymentHistory")}</Typography>
+              </Box>
+            ) : selectedHistoryPayment ? (
+              // Show bills table with historical distribution
+              purchases.length === 0 ? (
+                <Box textAlign="center" py={8} sx={{ color: "text.secondary" }}>
+                  <ReceiptIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+                  <Typography variant="h6">{t("noBillsFound")}</Typography>
+                </Box>
+              ) : (
+                <>
+                  {/* Supplier Summary */}
+                  <Box mb={3}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "primary.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("totalOutstanding")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            ₹
+                            {supplierTotals.totalOutstanding.toLocaleString(
+                              "en-IN",
+                              {
+                                maximumFractionDigits: 2,
+                              }
+                            )}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "error.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("unpaidBills")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {supplierTotals.unpaidBills}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "warning.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("partialBills")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {supplierTotals.partialBills}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "success.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("paidBills")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {supplierTotals.paidBills}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>{t("date")}</TableCell>
+                          <TableCell>{t("itemName")}</TableCell>
+                          <TableCell align="right">{t("quantity")}</TableCell>
+                          <TableCell align="right">{t("rate")}</TableCell>
+                          <TableCell align="right">
+                            {t("totalAmount")}
+                          </TableCell>
+                          <TableCell align="right">{t("paidAmount")}</TableCell>
+                          <TableCell align="right">
+                            {t("outstandingAmount")}
+                          </TableCell>
+                          <TableCell align="center">
+                            {t("paymentStatus")}
+                          </TableCell>
+                          <TableCell align="right">{t("paidOnDate")}</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {purchases.map((purchase) => {
+                          const historyDist =
+                            selectedHistoryPayment.distributions.find(
+                              (d) =>
+                                String(d.purchaseId) === String(purchase._id)
+                            );
+                          const isInHistory = !!historyDist;
+
+                          return (
+                            <TableRow
+                              key={purchase._id}
+                              sx={{
+                                bgcolor: isInHistory
+                                  ? "success.light"
+                                  : "inherit",
+                                "&:hover": { bgcolor: "action.hover" },
+                              }}
+                            >
+                              <TableCell>
+                                {dayjs(purchase.date).format("DD/MM/YYYY")}
+                              </TableCell>
+                              <TableCell>{purchase.itemName}</TableCell>
+                              <TableCell align="right">
+                                {purchase.quantity} {purchase.unit}
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{purchase.rate.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{purchase.totalAmount.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{purchase.paidAmount.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontWeight: 600,
+                                    color:
+                                      purchase.outstandingAmount > 0
+                                        ? "error.main"
+                                        : "success.main",
+                                  }}
+                                >
+                                  ₹{purchase.outstandingAmount.toFixed(2)}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={t(purchase.paymentStatus)}
+                                  size="small"
+                                  color={
+                                    purchase.paymentStatus === "paid"
+                                      ? "success"
+                                      : purchase.paymentStatus === "partial"
+                                      ? "warning"
+                                      : "error"
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                {historyDist ? (
+                                  <Tooltip
+                                    title={`${t("paidOn")} ${dayjs(
+                                      selectedHistoryPayment.paymentDate
+                                    ).format("DD/MM/YYYY")}`}
+                                  >
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        fontWeight: 600,
+                                        color: "success.main",
+                                      }}
+                                    >
+                                      ₹{historyDist.paidAmount.toFixed(2)}
+                                    </Typography>
+                                  </Tooltip>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    ₹0.00
+                                  </Typography>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </>
+              )
+            ) : (
+              // Payment History List
+              <>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  {t("paymentHistory")}
+                </Typography>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>{t("paymentDate")}</TableCell>
+                        <TableCell align="right">{t("totalAmount")}</TableCell>
+                        <TableCell align="right">{t("billsPaid")}</TableCell>
+                        <TableCell align="center">{t("action")}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {paymentHistoryData?.payments?.map((payment) => (
+                        <TableRow
+                          key={payment._id}
+                          sx={{
+                            cursor: "pointer",
+                            "&:hover": { bgcolor: "action.hover" },
+                          }}
+                          onClick={() => handleHistoryPaymentClick(payment)}
+                        >
+                          <TableCell>
+                            {dayjs(payment.paymentDate).format("DD/MM/YYYY")}
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              ₹
+                              {payment.totalAmount.toLocaleString("en-IN", {
+                                maximumFractionDigits: 2,
+                              })}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            {payment.distributions.length}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleHistoryPaymentClick(payment);
+                              }}
+                            >
+                              {t("viewDetails")}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )
           ) : purchases.length === 0 ? (
             <Box textAlign="center" py={8} sx={{ color: "text.secondary" }}>
               <ReceiptIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />

@@ -1,4 +1,5 @@
 import Sales from "../models/Sales.js";
+import ReceivablePaymentHistory from "../models/ReceivablePaymentHistory.js";
 
 // Get receivables summary (total outstanding by customer)
 export const getReceivablesSummary = async (req, res) => {
@@ -102,6 +103,10 @@ export const updateReceivablesPayment = async (req, res) => {
     }
 
     const updatedSales = [];
+    const distributions = [];
+
+    // Calculate total payment amount
+    let totalPaymentAmount = 0;
 
     // Update each sale with payment
     for (const payment of payments) {
@@ -117,6 +122,17 @@ export const updateReceivablesPayment = async (req, res) => {
         continue;
       }
 
+      // Store distribution details for history
+      distributions.push({
+        saleId: sale._id,
+        paidAmount: paidAmount,
+        saleDate: sale.date,
+        itemName: sale.itemName,
+        total: sale.total,
+      });
+
+      totalPaymentAmount += paidAmount;
+
       // Update paid amount
       const newPaidAmount = sale.paidAmount + paidAmount;
       sale.paidAmount = Math.min(newPaidAmount, sale.total);
@@ -126,6 +142,17 @@ export const updateReceivablesPayment = async (req, res) => {
       updatedSales.push(sale);
     }
 
+    // Save payment history
+    if (distributions.length > 0 && totalPaymentAmount > 0) {
+      const paymentHistory = new ReceivablePaymentHistory({
+        customer,
+        paymentDate: new Date(),
+        totalAmount: totalPaymentAmount,
+        distributions,
+      });
+      await paymentHistory.save();
+    }
+
     res.json({
       message: "Payments updated successfully",
       updatedCount: updatedSales.length,
@@ -133,5 +160,28 @@ export const updateReceivablesPayment = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+// Get payment history for a specific customer
+export const getCustomerPaymentHistory = async (req, res) => {
+  try {
+    const { customer } = req.query;
+
+    if (!customer) {
+      return res.status(400).json({ message: "Customer name is required" });
+    }
+
+    // Get all payment history for this customer, sorted by date (newest first)
+    const paymentHistory = await ReceivablePaymentHistory.find({ customer })
+      .sort({ paymentDate: -1 })
+      .exec();
+
+    res.json({
+      customer,
+      payments: paymentHistory,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

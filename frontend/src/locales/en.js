@@ -284,4 +284,16 @@ export const en = {
   selectCustomerToViewBillsDescription:
     "Choose a customer from the dropdown above to view their bills",
   totalPaymentHelper: "Total payment amount from selected bills",
+
+  // Payment History
+  history: "History",
+  paymentHistory: "Payment History",
+  makePayment: "Make Payment",
+  noPaymentHistory: "No payment history found for this supplier",
+  viewDetails: "View Details",
+  action: "Action",
+  billsPaid: "Bills Paid",
+  paidOnDate: "Paid on Date",
+  paidOn: "Paid on",
+  back: "Back",
 };

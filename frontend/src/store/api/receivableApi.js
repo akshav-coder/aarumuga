@@ -21,6 +21,13 @@ export const receivableApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Receivable", "Sales"],
     }),
+    getCustomerPaymentHistory: builder.query({
+      query: (customer) => ({
+        url: "/receivables/history",
+        params: { customer },
+      }),
+      providesTags: ["ReceivablePaymentHistory"],
+    }),
   }),
 });
 
@@ -28,4 +35,5 @@ export const {
   useGetReceivablesSummaryQuery,
   useGetCustomerReceivablesQuery,
   useUpdateReceivablesPaymentMutation,
+  useGetCustomerPaymentHistoryQuery,
 } = receivableApi;

@@ -1,4 +1,5 @@
 import Purchase from "../models/Purchase.js";
+import PaymentHistory from "../models/PaymentHistory.js";
 
 // Get payables summary (total outstanding by supplier)
 export const getPayablesSummary = async (req, res) => {
@@ -106,6 +107,10 @@ export const updatePayablesPayment = async (req, res) => {
     }
 
     const updatedPurchases = [];
+    const distributions = [];
+
+    // Calculate total payment amount
+    let totalPaymentAmount = 0;
 
     // Update each purchase with payment
     for (const payment of payments) {
@@ -121,6 +126,17 @@ export const updatePayablesPayment = async (req, res) => {
         continue;
       }
 
+      // Store distribution details for history
+      distributions.push({
+        purchaseId: purchase._id,
+        paidAmount: paidAmount,
+        purchaseDate: purchase.date,
+        itemName: purchase.itemName,
+        totalAmount: purchase.totalAmount,
+      });
+
+      totalPaymentAmount += paidAmount;
+
       // Update paid amount
       const newPaidAmount = purchase.paidAmount + paidAmount;
       purchase.paidAmount = Math.min(newPaidAmount, purchase.totalAmount);
@@ -130,6 +146,17 @@ export const updatePayablesPayment = async (req, res) => {
       updatedPurchases.push(purchase);
     }
 
+    // Save payment history
+    if (distributions.length > 0 && totalPaymentAmount > 0) {
+      const paymentHistory = new PaymentHistory({
+        supplier,
+        paymentDate: new Date(),
+        totalAmount: totalPaymentAmount,
+        distributions,
+      });
+      await paymentHistory.save();
+    }
+
     res.json({
       message: "Payments updated successfully",
       updatedCount: updatedPurchases.length,
@@ -137,5 +164,28 @@ export const updatePayablesPayment = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+// Get payment history for a specific supplier
+export const getSupplierPaymentHistory = async (req, res) => {
+  try {
+    const { supplier } = req.query;
+
+    if (!supplier) {
+      return res.status(400).json({ message: "Supplier name is required" });
+    }
+
+    // Get all payment history for this supplier, sorted by date (newest first)
+    const paymentHistory = await PaymentHistory.find({ supplier })
+      .sort({ paymentDate: -1 })
+      .exec();
+
+    res.json({
+      supplier,
+      payments: paymentHistory,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

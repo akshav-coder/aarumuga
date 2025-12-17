@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Button,
@@ -27,10 +27,15 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import HistoryIcon from "@mui/icons-material/History";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import {
   useGetReceivablesSummaryQuery,
   useGetCustomerReceivablesQuery,
   useUpdateReceivablesPaymentMutation,
+  useGetCustomerPaymentHistoryQuery,
 } from "../store/api/receivableApi";
 import { useGetCustomersQuery } from "../store/api/customerApi";
 import { useToast } from "../components/common/ToastProvider";
@@ -47,6 +52,8 @@ function ReceivablesPage() {
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [selectedBills, setSelectedBills] = useState(new Set());
   const [billPayments, setBillPayments] = useState({});
+  const [historyMode, setHistoryMode] = useState(false);
+  const [selectedHistoryPayment, setSelectedHistoryPayment] = useState(null);
 
   // Fetch receivables summary
   const { data: summaryData, refetch: refetchSummary } =
@@ -62,14 +69,25 @@ function ReceivablesPage() {
       skip: !selectedCustomer,
     });
 
+  // Fetch payment history when in history mode
+  const { data: paymentHistoryData, refetch: refetchPaymentHistory } =
+    useGetCustomerPaymentHistoryQuery(selectedCustomer, {
+      skip: !selectedCustomer || !historyMode,
+    });
+
   const [updatePayment, { isLoading: isUpdating }] =
     useUpdateReceivablesPaymentMutation();
 
-  // Filter out paid bills - only show unpaid and partial bills
+  // Get all sales (not filtered) for history view, or only outstanding for payment view
+  const allSales = customerReceivablesData?.sales || [];
   const sales = useMemo(() => {
-    const allSales = customerReceivablesData?.sales || [];
+    if (historyMode && selectedHistoryPayment) {
+      // In history view, show all sales
+      return allSales;
+    }
+    // In payment view, only show unpaid and partial bills
     return allSales.filter((sale) => sale.outstandingAmount > 0);
-  }, [customerReceivablesData]);
+  }, [allSales, historyMode, selectedHistoryPayment]);
 
   // Calculate total payment from selected bills
   const totalPayment = useMemo(() => {
@@ -84,7 +102,43 @@ function ReceivablesPage() {
     setSelectedCustomer(customer);
     setSelectedBills(new Set());
     setBillPayments({});
+    setSelectedHistoryPayment(null);
   };
+
+  const handleHistoryModeToggle = (event, newMode) => {
+    if (newMode !== null) {
+      setHistoryMode(newMode);
+      setSelectedHistoryPayment(null);
+      setSelectedBills(new Set());
+      setBillPayments({});
+      // useEffect will handle refetching when historyMode changes
+    }
+  };
+
+  const handleHistoryPaymentClick = (payment) => {
+    setSelectedHistoryPayment(payment);
+    // Clear payment selections when viewing history
+    setSelectedBills(new Set());
+    setBillPayments({});
+  };
+
+  const handleBackFromHistory = () => {
+    setSelectedHistoryPayment(null);
+    setSelectedBills(new Set());
+    setBillPayments({});
+  };
+
+  // Refetch data when history mode or customer changes
+  useEffect(() => {
+    if (selectedCustomer) {
+      if (historyMode) {
+        refetchPaymentHistory();
+      } else {
+        refetchCustomerReceivables();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyMode, selectedCustomer]);
 
   const handleBillSelect = (saleId, isSelected) => {
     const newSelected = new Set(selectedBills);
@@ -172,6 +226,9 @@ function ReceivablesPage() {
       setBillPayments({});
       refetchSummary();
       refetchCustomerReceivables();
+      if (historyMode) {
+        refetchPaymentHistory();
+      }
     } catch (error) {
       showToast(error.data?.message || t("failedToSave"), "error");
     }
@@ -376,7 +433,32 @@ function ReceivablesPage() {
       {/* Payment Section */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Grid container spacing={3} alignItems="center">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {historyMode ? t("paymentHistory") : t("makePayment")}
+            </Typography>
+            <ToggleButtonGroup
+              value={historyMode}
+              exclusive
+              onChange={handleHistoryModeToggle}
+              aria-label="payment mode"
+            >
+              <ToggleButton value={false} aria-label="payment mode">
+                {t("makePayment")}
+              </ToggleButton>
+              <ToggleButton value={true} aria-label="history mode">
+                <HistoryIcon sx={{ mr: 1 }} />
+                {t("history")}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          <Grid container spacing={3} alignItems="flex-start">
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
                 <InputLabel>{t("customer")}</InputLabel>
@@ -397,47 +479,51 @@ function ReceivablesPage() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label={t("totalPayment")}
-                value={formatIndianNumber(totalPayment) || "0"}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">₹</InputAdornment>
-                  ),
-                }}
-                disabled
-                helperText={t("totalPaymentHelper")}
-              />
-            </Grid>
+            {!historyMode && (
+              <>
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    label={t("totalPayment")}
+                    value={formatIndianNumber(totalPayment) || "0"}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">₹</InputAdornment>
+                      ),
+                    }}
+                    disabled
+                    helperText={t("totalPaymentHelper")}
+                  />
+                </Grid>
 
-            <Grid item xs={12} md={4}>
-              <Button
-                fullWidth
-                variant="contained"
-                size="large"
-                startIcon={<PaymentIcon />}
-                onClick={handlePay}
-                disabled={
-                  !selectedCustomer ||
-                  selectedBills.size === 0 ||
-                  totalPayment <= 0 ||
-                  isUpdating
-                }
-                sx={{
-                  height: "56px",
-                  fontSize: "1.125rem",
-                  fontWeight: 600,
-                }}
-              >
-                {isUpdating ? t("processing") : t("pay")}
-              </Button>
-            </Grid>
+                <Grid item xs={12} md={4}>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    startIcon={<PaymentIcon />}
+                    onClick={handlePay}
+                    disabled={
+                      !selectedCustomer ||
+                      selectedBills.size === 0 ||
+                      totalPayment <= 0 ||
+                      isUpdating
+                    }
+                    sx={{
+                      height: "56px",
+                      fontSize: "1.125rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isUpdating ? t("processing") : t("pay")}
+                  </Button>
+                </Grid>
+              </>
+            )}
           </Grid>
 
           {/* Selection Summary */}
-          {selectedBills.size > 0 && (
+          {selectedBills.size > 0 && !historyMode && (
             <Box mt={3} p={2} bgcolor="info.light" borderRadius={2}>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
                 {t("billsSelected")}: {selectedBills.size}
@@ -450,10 +536,45 @@ function ReceivablesPage() {
               </Typography>
             </Box>
           )}
+
+          {/* Historical Payment Summary */}
+          {historyMode && selectedHistoryPayment && (
+            <Box mt={3} p={2} bgcolor="success.light" borderRadius={2}>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={1}
+              >
+                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                  {t("paymentDate")}:{" "}
+                  {dayjs(selectedHistoryPayment.paymentDate).format(
+                    "DD/MM/YYYY"
+                  )}
+                </Typography>
+                <Button
+                  size="small"
+                  startIcon={<ArrowBackIcon />}
+                  onClick={handleBackFromHistory}
+                >
+                  {t("back")}
+                </Button>
+              </Box>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                {t("totalPayment")}: ₹
+                {selectedHistoryPayment.totalAmount.toLocaleString("en-IN", {
+                  maximumFractionDigits: 2,
+                })}
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {t("billsPaid")}: {selectedHistoryPayment.distributions.length}
+              </Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
 
-      {/* Bills Table */}
+      {/* Bills Table or Payment History */}
       <Card>
         <CardContent>
           {!selectedCustomer ? (
@@ -466,6 +587,258 @@ function ReceivablesPage() {
                 {t("selectCustomerToViewBillsDescription")}
               </Typography>
             </Box>
+          ) : historyMode ? (
+            // Payment History View
+            paymentHistoryData?.payments?.length === 0 ? (
+              <Box textAlign="center" py={8} sx={{ color: "text.secondary" }}>
+                <HistoryIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+                <Typography variant="h6">{t("noPaymentHistory")}</Typography>
+              </Box>
+            ) : selectedHistoryPayment ? (
+              // Show bills table with historical distribution
+              allSales.length === 0 ? (
+                <Box textAlign="center" py={8} sx={{ color: "text.secondary" }}>
+                  <ReceiptIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+                  <Typography variant="h6">{t("noBillsFound")}</Typography>
+                </Box>
+              ) : (
+                <>
+                  {/* Customer Summary */}
+                  <Box mb={3}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "primary.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("totalOutstanding")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            ₹
+                            {customerTotals.totalOutstanding.toLocaleString(
+                              "en-IN",
+                              {
+                                maximumFractionDigits: 2,
+                              }
+                            )}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "error.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("unpaidBills")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {customerTotals.unpaidBills}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "warning.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("partialBills")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {customerTotals.partialBills}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid item xs={12} sm={6} md={3}>
+                        <Paper sx={{ p: 2, bgcolor: "success.light" }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("paidBills")}
+                          </Typography>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {customerTotals.paidBills}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </Box>
+
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>{t("date")}</TableCell>
+                          <TableCell>{t("itemName")}</TableCell>
+                          <TableCell align="right">{t("quantity")}</TableCell>
+                          <TableCell align="right">{t("rate")}</TableCell>
+                          <TableCell align="right">{t("subtotal")}</TableCell>
+                          <TableCell align="right">{t("discount")}</TableCell>
+                          <TableCell align="right">{t("total")}</TableCell>
+                          <TableCell align="right">{t("paidAmount")}</TableCell>
+                          <TableCell align="right">
+                            {t("outstandingAmount")}
+                          </TableCell>
+                          <TableCell align="center">
+                            {t("paymentStatus")}
+                          </TableCell>
+                          <TableCell align="right">{t("paidOnDate")}</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {allSales.map((sale) => {
+                          const historyDist =
+                            selectedHistoryPayment.distributions.find(
+                              (d) => String(d.saleId) === String(sale._id)
+                            );
+                          const isInHistory = !!historyDist;
+
+                          return (
+                            <TableRow
+                              key={sale._id}
+                              sx={{
+                                bgcolor: isInHistory
+                                  ? "success.light"
+                                  : "inherit",
+                                "&:hover": { bgcolor: "action.hover" },
+                              }}
+                            >
+                              <TableCell>
+                                {dayjs(sale.date).format("DD/MM/YYYY")}
+                              </TableCell>
+                              <TableCell>{sale.itemName}</TableCell>
+                              <TableCell align="right">
+                                {sale.quantity} kg
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{sale.rate.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{sale.subtotal.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{sale.discount.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{sale.total.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                ₹{sale.paidAmount.toFixed(2)}
+                              </TableCell>
+                              <TableCell align="right">
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontWeight: 600,
+                                    color:
+                                      sale.outstandingAmount > 0
+                                        ? "error.main"
+                                        : "success.main",
+                                  }}
+                                >
+                                  ₹{sale.outstandingAmount.toFixed(2)}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  label={t(sale.paymentStatus)}
+                                  size="small"
+                                  color={
+                                    sale.paymentStatus === "paid"
+                                      ? "success"
+                                      : sale.paymentStatus === "partial"
+                                      ? "warning"
+                                      : "error"
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                {historyDist ? (
+                                  <Tooltip
+                                    title={`${t("paidOn")} ${dayjs(
+                                      selectedHistoryPayment.paymentDate
+                                    ).format("DD/MM/YYYY")}`}
+                                  >
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        fontWeight: 600,
+                                        color: "success.main",
+                                      }}
+                                    >
+                                      ₹{historyDist.paidAmount.toFixed(2)}
+                                    </Typography>
+                                  </Tooltip>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    ₹0.00
+                                  </Typography>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </>
+              )
+            ) : (
+              // Payment History List
+              <>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  {t("paymentHistory")}
+                </Typography>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>{t("paymentDate")}</TableCell>
+                        <TableCell align="right">{t("totalAmount")}</TableCell>
+                        <TableCell align="right">{t("billsPaid")}</TableCell>
+                        <TableCell align="center">{t("action")}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {paymentHistoryData?.payments?.map((payment) => (
+                        <TableRow
+                          key={payment._id}
+                          sx={{
+                            cursor: "pointer",
+                            "&:hover": { bgcolor: "action.hover" },
+                          }}
+                          onClick={() => handleHistoryPaymentClick(payment)}
+                        >
+                          <TableCell>
+                            {dayjs(payment.paymentDate).format("DD/MM/YYYY")}
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              ₹
+                              {payment.totalAmount.toLocaleString("en-IN", {
+                                maximumFractionDigits: 2,
+                              })}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="right">
+                            {payment.distributions.length}
+                          </TableCell>
+                          <TableCell align="center">
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleHistoryPaymentClick(payment);
+                              }}
+                            >
+                              {t("viewDetails")}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )
           ) : sales.length === 0 ? (
             <Box textAlign="center" py={8} sx={{ color: "text.secondary" }}>
               <ReceiptIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />

@@ -21,6 +21,13 @@ export const payableApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ["Payable", "Purchase"],
     }),
+    getSupplierPaymentHistory: builder.query({
+      query: (supplier) => ({
+        url: "/payables/history",
+        params: { supplier },
+      }),
+      providesTags: ["PaymentHistory"],
+    }),
   }),
 });
 
@@ -28,4 +35,5 @@ export const {
   useGetPayablesSummaryQuery,
   useGetSupplierPayablesQuery,
   useUpdatePayablesPaymentMutation,
+  useGetSupplierPaymentHistoryQuery,
 } = payableApi;
