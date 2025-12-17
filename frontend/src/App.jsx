@@ -8,6 +8,8 @@ import SalesPage from "./pages/SalesPage";
 import StockPage from "./pages/StockPage";
 import CustomerPage from "./pages/CustomerPage";
 import SupplierPage from "./pages/SupplierPage";
+import PayablesPage from "./pages/PayablesPage";
+import ReceivablesPage from "./pages/ReceivablesPage";
 import { useAuth } from "./contexts/AuthContext";
 
 function App() {
@@ -37,6 +39,8 @@ function App() {
                 <Route path="/stock" element={<StockPage />} />
                 <Route path="/customers" element={<CustomerPage />} />
                 <Route path="/suppliers" element={<SupplierPage />} />
+                <Route path="/payables" element={<PayablesPage />} />
+                <Route path="/receivables" element={<ReceivablesPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

@@ -7,6 +7,8 @@ export const en = {
   customers: "Customers",
   suppliers: "Suppliers",
   payments: "Payments",
+  payables: "Payables",
+  receivables: "Receivables",
 
   // Common
   add: "Add",
@@ -256,4 +258,30 @@ export const en = {
   confirmDeleteUser: "Are you sure you want to delete this user?",
   invalidCredentials: "Invalid email or password",
   accountDeactivated: "Account is deactivated",
+
+  // Payables
+  payablesSubtitle: "Manage supplier payments and outstanding bills",
+  totalPayables: "Total Payables",
+  unpaidBills: "Unpaid Bills",
+  partialBills: "Partial Bills",
+  totalOutstandingBills: "Total Outstanding Bills",
+  selectSupplierToViewBills: "Select a supplier to view bills",
+  selectSupplierToViewBillsDescription:
+    "Choose a supplier from the dropdown above to view their bills",
+  noBillsFound: "No bills found for this supplier",
+  pay: "Pay",
+  processing: "Processing...",
+  billsSelected: "Bills Selected",
+  totalPayment: "Total Payment",
+  remainingAfterPayment: "Remaining After Payment",
+  distributed: "Distributed",
+  paidBills: "Paid Bills",
+
+  // Receivables
+  receivablesSubtitle: "Manage customer payments and outstanding bills",
+  totalReceivables: "Total Receivables",
+  selectCustomerToViewBills: "Select a customer to view bills",
+  selectCustomerToViewBillsDescription:
+    "Choose a customer from the dropdown above to view their bills",
+  totalPaymentHelper: "Total payment amount from selected bills",
 };
