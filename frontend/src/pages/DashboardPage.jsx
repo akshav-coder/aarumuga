@@ -26,7 +26,6 @@ import { useGetSalesQuery } from "../store/api/salesApi";
 import { useGetStockQuery } from "../store/api/stockApi";
 import { useGetCustomersQuery } from "../store/api/customerApi";
 import { useGetSuppliersQuery } from "../store/api/supplierApi";
-import { useGetOutstandingPaymentsQuery } from "../store/api/paymentApi";
 import { useTranslation } from "../hooks/useTranslation";
 import dayjs from "dayjs";
 
@@ -37,7 +36,6 @@ function DashboardPage() {
   const { data: stockData } = useGetStockQuery({ limit: 1000 });
   const { data: customersData } = useGetCustomersQuery({ page: 1, limit: 1 });
   const { data: suppliersData } = useGetSuppliersQuery({ page: 1, limit: 1 });
-  const { data: outstandingData } = useGetOutstandingPaymentsQuery();
 
   const stats = useMemo(() => {
     const totalPurchases = purchasesData?.total || 0;
@@ -58,7 +56,6 @@ function DashboardPage() {
       ) || [];
 
     const profit = totalSalesAmount - totalPurchaseAmount;
-    const totalOutstanding = outstandingData?.totalOutstanding || 0;
 
     return {
       totalPurchases,
@@ -71,17 +68,8 @@ function DashboardPage() {
       profit,
       lowStockItems: lowStockItems.length,
       lowStockItemsList: lowStockItems.slice(0, 5),
-      totalOutstanding,
-      outstandingSales: outstandingData?.sales?.slice(0, 5) || [],
     };
-  }, [
-    purchasesData,
-    salesData,
-    stockData,
-    customersData,
-    suppliersData,
-    outstandingData,
-  ]);
+  }, [purchasesData, salesData, stockData, customersData, suppliersData]);
 
   const recentPurchases = purchasesData?.purchases?.slice(0, 5) || [];
   const recentSales = salesData?.sales?.slice(0, 5) || [];
@@ -398,47 +386,6 @@ function DashboardPage() {
             </CardContent>
           </Card>
         </Grid>
-
-        <Grid item xs={12} sm={6} md={4}>
-          <Card
-            sx={{
-              background: stats.totalOutstanding > 0 ? "#f59e0b" : "#10b981",
-              color: "white",
-            }}
-          >
-            <CardContent>
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Box>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      opacity: 0.9,
-                      mb: 1,
-                      fontSize: "1.125rem",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {t("outstandingPayments")}
-                  </Typography>
-                  <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 700, fontSize: "2rem" }}
-                  >
-                    ₹
-                    {stats.totalOutstanding.toLocaleString("en-IN", {
-                      maximumFractionDigits: 0,
-                    })}
-                  </Typography>
-                </Box>
-                <AttachMoneyIcon sx={{ fontSize: 32, opacity: 0.8 }} />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
 
       {/* Low Stock Alert */}
@@ -464,38 +411,6 @@ function DashboardPage() {
               </li>
             ))}
           </Box>
-        </Alert>
-      )}
-
-      {/* Outstanding Payments Alert */}
-      {stats.totalOutstanding > 0 && (
-        <Alert
-          severity="warning"
-          sx={{ mb: 3, fontSize: "1.125rem" }}
-          icon={<AttachMoneyIcon />}
-        >
-          <Typography
-            variant="body1"
-            sx={{ fontWeight: 600, mb: 1.5, fontSize: "1.25rem" }}
-          >
-            {t("outstandingPayments")}: ₹
-            {stats.totalOutstanding.toLocaleString("en-IN", {
-              maximumFractionDigits: 0,
-            })}
-          </Typography>
-          {stats.outstandingSales.length > 0 && (
-            <Box component="ul" sx={{ m: 0, pl: 3 }}>
-              {stats.outstandingSales.map((sale) => (
-                <li key={sale._id} style={{ marginBottom: "8px" }}>
-                  <Typography variant="body1" sx={{ fontSize: "1.125rem" }}>
-                    {sale.customer}: ₹
-                    {(sale.outstandingAmount || sale.total).toFixed(2)} (
-                    {dayjs(sale.date).format("DD/MM/YYYY")})
-                  </Typography>
-                </li>
-              ))}
-            </Box>
-          )}
         </Alert>
       )}
 

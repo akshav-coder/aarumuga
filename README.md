@@ -13,12 +13,14 @@ A full-stack MERN application for managing tamarind paste manufacturing operatio
 ## Tech Stack
 
 ### Backend
+
 - Node.js
 - Express.js
 - MongoDB with Mongoose
 - RESTful API
 
 ### Frontend
+
 - React 19
 - Material UI
 - Redux Toolkit with RTK Query
@@ -47,22 +49,26 @@ Armuga/
 ## Setup Instructions
 
 ### Prerequisites
+
 - Node.js (v18 or higher)
 - MongoDB (local or MongoDB Atlas)
 
 ### Backend Setup
 
 1. Navigate to backend directory:
+
 ```bash
 cd backend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Create `.env` file:
+
 ```bash
 PORT=5001
 MONGODB_URI=mongodb://localhost:27017/manufacturing_management
@@ -70,28 +76,27 @@ NODE_ENV=development
 ```
 
 4. Start the server:
+
 ```bash
 npm run dev
-```
-
-5. (Optional) Seed demo data:
-```bash
-npm run seed
 ```
 
 ### Frontend Setup
 
 1. Navigate to frontend directory:
+
 ```bash
 cd frontend
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -101,6 +106,7 @@ The application will be available at `http://localhost:3000`
 ## API Endpoints
 
 ### Purchases
+
 - `GET /api/purchases` - Get all purchases (with pagination and search)
 - `GET /api/purchases/:id` - Get single purchase
 - `POST /api/purchases` - Create purchase
@@ -108,6 +114,7 @@ The application will be available at `http://localhost:3000`
 - `DELETE /api/purchases/:id` - Delete purchase
 
 ### Sales
+
 - `GET /api/sales` - Get all sales (with pagination, search, and date filters)
 - `GET /api/sales/:id` - Get single sale
 - `POST /api/sales` - Create sale (with stock validation)
@@ -115,6 +122,7 @@ The application will be available at `http://localhost:3000`
 - `DELETE /api/sales/:id` - Delete sale
 
 ### Stock
+
 - `GET /api/stock` - Get all stock items
 - `GET /api/stock/:itemName` - Get single stock item
 - `PUT /api/stock/:itemName` - Update stock manually
@@ -124,6 +132,7 @@ The application will be available at `http://localhost:3000`
 ## Features Details
 
 ### Raw Materials Module
+
 - Track raw material purchases (tamarind, spices, packaging)
 - Auto-calculates total amount (quantity × rate)
 - Automatically updates raw material inventory
@@ -131,6 +140,7 @@ The application will be available at `http://localhost:3000`
 - Pagination support
 
 ### Product Sales Module
+
 - Manage sales of finished products (tamarind paste variants)
 - Validates stock availability before creating/updating sales
 - Auto-calculates total amount
@@ -139,6 +149,7 @@ The application will be available at `http://localhost:3000`
 - Automatically decreases finished product stock on sale
 
 ### Inventory Module
+
 - Track both raw materials and finished products separately
 - Auto-updated based on purchases and sales
 - Low stock highlighting (items below threshold)
@@ -148,4 +159,3 @@ The application will be available at `http://localhost:3000`
 ## License
 
 ISC
-

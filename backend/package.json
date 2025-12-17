@@ -6,14 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "seed": "node scripts/seed.js",
-    "createAdmin": "node scripts/createAdmin.js",
-    "clearData": "node scripts/clearData.js",
-    "addSuppliers": "node scripts/addSuppliers.js",
-    "addCustomers": "node scripts/addCustomers.js",
-    "addSales": "node scripts/addSales.js",
-    "fixStockUnit": "node scripts/fixStockUnit.js"
+    "dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

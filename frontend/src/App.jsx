@@ -8,8 +8,6 @@ import SalesPage from "./pages/SalesPage";
 import StockPage from "./pages/StockPage";
 import CustomerPage from "./pages/CustomerPage";
 import SupplierPage from "./pages/SupplierPage";
-import PaymentsPage from "./pages/PaymentsPage";
-import SupplierPaymentsPage from "./pages/SupplierPaymentsPage";
 import { useAuth } from "./contexts/AuthContext";
 
 function App() {
@@ -39,11 +37,6 @@ function App() {
                 <Route path="/stock" element={<StockPage />} />
                 <Route path="/customers" element={<CustomerPage />} />
                 <Route path="/suppliers" element={<SupplierPage />} />
-                <Route path="/payments" element={<PaymentsPage />} />
-                <Route
-                  path="/supplier-payments"
-                  element={<SupplierPaymentsPage />}
-                />
               </Routes>
             </Layout>
           </ProtectedRoute>

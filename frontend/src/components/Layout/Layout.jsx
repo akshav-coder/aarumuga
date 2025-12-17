@@ -83,16 +83,6 @@ function Layout({ children }) {
       icon: <BusinessIcon />,
       path: "/suppliers",
     },
-    {
-      text: getTranslation(language, "payments"),
-      icon: <PaymentIcon />,
-      path: "/payments",
-    },
-    {
-      text: getTranslation(language, "supplierPayments"),
-      icon: <PaymentIcon />,
-      path: "/supplier-payments",
-    },
   ];
 
   const handleDrawerToggle = () => {
