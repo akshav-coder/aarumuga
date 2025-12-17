@@ -58,3 +58,4 @@ const ReceivablePaymentHistory = mongoose.model(
 );
 
 export default ReceivablePaymentHistory;
+

@@ -24,3 +24,4 @@ router.delete("/users/:id", authenticate, authorize("admin"), deleteUser);
 export default router;
 
 
+
