@@ -4,7 +4,16 @@ import Stock from "../models/Stock.js";
 // Get all sales
 export const getSales = async (req, res) => {
   try {
-    const { search, startDate, endDate, page = 1, limit = 10 } = req.query;
+    const {
+      search,
+      startDate,
+      endDate,
+      customer,
+      paymentStatus,
+      paymentMethod,
+      page = 1,
+      limit = 10,
+    } = req.query;
     const query = {};
 
     if (search) {
@@ -18,6 +27,18 @@ export const getSales = async (req, res) => {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);
       if (endDate) query.date.$lte = new Date(endDate);
+    }
+
+    if (customer) {
+      query.customer = { $regex: customer, $options: "i" };
+    }
+
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus;
+    }
+
+    if (paymentMethod) {
+      query.paymentMethod = paymentMethod;
     }
 
     const sales = await Sales.find(query)

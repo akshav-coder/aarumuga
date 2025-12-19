@@ -13,6 +13,10 @@ import {
   Checkbox,
   Toolbar,
   Paper,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -27,6 +31,7 @@ import {
   useDeletePurchaseMutation,
   useBulkDeletePurchasesMutation,
 } from "../store/api/purchaseApi";
+import { useGetSuppliersQuery } from "../store/api/supplierApi";
 import { useToast } from "../components/common/ToastProvider";
 import { useTranslation } from "../hooks/useTranslation";
 import dayjs from "dayjs";
@@ -36,15 +41,27 @@ function PurchasePage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [supplier, setSupplier] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
 
   const { showToast } = useToast();
+  const { data: suppliersData } = useGetSuppliersQuery({ limit: 1000 });
+  const suppliers = suppliersData?.suppliers || [];
   const { data, isLoading, refetch } = useGetPurchasesQuery({
     page: page + 1,
     limit: rowsPerPage,
     search,
+    startDate,
+    endDate,
+    supplier,
+    paymentStatus,
+    paymentMethod,
   });
   const [deletePurchase] = useDeletePurchaseMutation();
   const [bulkDeletePurchases] = useBulkDeletePurchasesMutation();
@@ -267,27 +284,131 @@ function PurchasePage() {
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box display="flex" gap={2} alignItems="center">
-            <TextField
-              fullWidth
-              placeholder={t("searchPurchase")}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: "text.secondary" }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": { bgcolor: "background.paper" },
-              }}
-            />
-          </Box>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                placeholder={t("searchPurchase")}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { bgcolor: "background.paper" },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
+              <TextField
+                fullWidth
+                label={t("startDate")}
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPage(0);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
+              <TextField
+                fullWidth
+                label={t("endDate")}
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPage(0);
+                }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={2}>
+              <FormControl fullWidth>
+                <InputLabel>{t("supplier")}</InputLabel>
+                <Select
+                  value={supplier}
+                  onChange={(e) => {
+                    setSupplier(e.target.value);
+                    setPage(0);
+                  }}
+                  label={t("supplier")}
+                >
+                  <MenuItem value="">{t("all")}</MenuItem>
+                  {suppliers.map((sup) => (
+                    <MenuItem key={sup._id} value={sup.name}>
+                      {sup.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={1.5}>
+              <FormControl fullWidth>
+                <InputLabel>{t("paymentStatus")}</InputLabel>
+                <Select
+                  value={paymentStatus}
+                  onChange={(e) => {
+                    setPaymentStatus(e.target.value);
+                    setPage(0);
+                  }}
+                  label={t("paymentStatus")}
+                >
+                  <MenuItem value="">{t("all")}</MenuItem>
+                  <MenuItem value="paid">{t("paid")}</MenuItem>
+                  <MenuItem value="partial">{t("partial")}</MenuItem>
+                  <MenuItem value="unpaid">{t("unpaid")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={1.5}>
+              <FormControl fullWidth>
+                <InputLabel>{t("paymentMethod")}</InputLabel>
+                <Select
+                  value={paymentMethod}
+                  onChange={(e) => {
+                    setPaymentMethod(e.target.value);
+                    setPage(0);
+                  }}
+                  label={t("paymentMethod")}
+                >
+                  <MenuItem value="">{t("all")}</MenuItem>
+                  <MenuItem value="cash">{t("cash")}</MenuItem>
+                  <MenuItem value="credit">{t("credit")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            {(startDate ||
+              endDate ||
+              supplier ||
+              paymentStatus ||
+              paymentMethod) && (
+              <Grid item xs={12} md={12}>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setStartDate("");
+                    setEndDate("");
+                    setSupplier("");
+                    setPaymentStatus("");
+                    setPaymentMethod("");
+                    setPage(0);
+                  }}
+                >
+                  {t("clearFilters")}
+                </Button>
+              </Grid>
+            )}
+          </Grid>
         </CardContent>
       </Card>
 

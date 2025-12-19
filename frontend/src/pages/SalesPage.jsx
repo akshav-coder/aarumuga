@@ -14,6 +14,10 @@ import {
   Checkbox,
   Paper,
   Toolbar,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -29,6 +33,7 @@ import {
   useDeleteSaleMutation,
   useBulkDeleteSalesMutation,
 } from "../store/api/salesApi";
+import { useGetCustomersQuery } from "../store/api/customerApi";
 import { useToast } from "../components/common/ToastProvider";
 import { useTranslation } from "../hooks/useTranslation";
 import dayjs from "dayjs";
@@ -41,17 +46,25 @@ function SalesPage() {
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [customer, setCustomer] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
 
   const { showToast } = useToast();
+  const { data: customersData } = useGetCustomersQuery({ limit: 1000 });
+  const customers = customersData?.customers || [];
   const { data, isLoading, refetch } = useGetSalesQuery({
     page: page + 1,
     limit: rowsPerPage,
     search,
     startDate,
     endDate,
+    customer,
+    paymentStatus,
+    paymentMethod,
   });
   const [deleteSale] = useDeleteSaleMutation();
   const [bulkDeleteSales] = useBulkDeleteSalesMutation();
@@ -132,31 +145,35 @@ function SalesPage() {
     }
   };
 
-  const rows = (data?.sales || []).map((sale) => ({
-    id: sale._id,
-    checkbox: (
-      <Checkbox
-        checked={selectedIds.includes(sale._id)}
-        onChange={() => handleSelectOne(sale._id)}
-        onClick={(e) => e.stopPropagation()}
-      />
-    ),
-    date: dayjs(sale.date).format("DD/MM/YYYY"),
-    itemName: sale.itemName,
-    quantity: sale.quantity,
-    rate: `₹${sale.rate.toFixed(2)}`,
-    customer: sale.customer,
-    total: `₹${sale.total.toFixed(2)}`,
-    paymentStatus: (
-      <Chip
-        label={t(sale.paymentStatus || "unpaid")}
-        color={getPaymentStatusColor(sale.paymentStatus || "unpaid")}
-        size="small"
-      />
-    ),
-    outstandingAmount: `₹${(sale.outstandingAmount || sale.total).toFixed(2)}`,
-    original: sale,
-  }));
+  const rows = (data?.sales || [])
+    .filter((sale) => sale.paymentStatus !== "paid")
+    .map((sale) => ({
+      id: sale._id,
+      checkbox: (
+        <Checkbox
+          checked={selectedIds.includes(sale._id)}
+          onChange={() => handleSelectOne(sale._id)}
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      date: dayjs(sale.date).format("DD/MM/YYYY"),
+      itemName: sale.itemName,
+      quantity: sale.quantity,
+      rate: `₹${sale.rate.toFixed(2)}`,
+      customer: sale.customer,
+      total: `₹${sale.total.toFixed(2)}`,
+      paymentStatus: (
+        <Chip
+          label={t(sale.paymentStatus || "unpaid")}
+          color={getPaymentStatusColor(sale.paymentStatus || "unpaid")}
+          size="small"
+        />
+      ),
+      outstandingAmount: `₹${(sale.outstandingAmount || sale.total).toFixed(
+        2
+      )}`,
+      original: sale,
+    }));
 
   const allSelected = rows.length > 0 && selectedIds.length === rows.length;
   const someSelected =
@@ -339,30 +356,28 @@ function SalesPage() {
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <Box display="flex" gap={1}>
-                <TextField
-                  fullWidth
-                  placeholder={t("searchSales")}
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(0);
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: "text.secondary" }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": { bgcolor: "background.paper" },
-                  }}
-                />
-              </Box>
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                placeholder={t("searchSales")}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "text.secondary" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": { bgcolor: "background.paper" },
+                }}
+              />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2}>
               <TextField
                 fullWidth
                 label={t("startDate")}
@@ -375,7 +390,7 @@ function SalesPage() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2}>
               <TextField
                 fullWidth
                 label={t("endDate")}
@@ -388,21 +403,82 @@ function SalesPage() {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} md={2}>
-              {(startDate || endDate) && (
+            <Grid item xs={12} sm={6} md={2}>
+              <FormControl fullWidth>
+                <InputLabel>{t("customer")}</InputLabel>
+                <Select
+                  value={customer}
+                  onChange={(e) => {
+                    setCustomer(e.target.value);
+                    setPage(0);
+                  }}
+                  label={t("customer")}
+                >
+                  <MenuItem value="">{t("all")}</MenuItem>
+                  {customers.map((cust) => (
+                    <MenuItem key={cust._id} value={cust.name}>
+                      {cust.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={1.5}>
+              <FormControl fullWidth>
+                <InputLabel>{t("paymentStatus")}</InputLabel>
+                <Select
+                  value={paymentStatus}
+                  onChange={(e) => {
+                    setPaymentStatus(e.target.value);
+                    setPage(0);
+                  }}
+                  label={t("paymentStatus")}
+                >
+                  <MenuItem value="">{t("all")}</MenuItem>
+                  <MenuItem value="paid">{t("paid")}</MenuItem>
+                  <MenuItem value="partial">{t("partial")}</MenuItem>
+                  <MenuItem value="unpaid">{t("unpaid")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={1.5}>
+              <FormControl fullWidth>
+                <InputLabel>{t("paymentMethod")}</InputLabel>
+                <Select
+                  value={paymentMethod}
+                  onChange={(e) => {
+                    setPaymentMethod(e.target.value);
+                    setPage(0);
+                  }}
+                  label={t("paymentMethod")}
+                >
+                  <MenuItem value="">{t("all")}</MenuItem>
+                  <MenuItem value="cash">{t("cash")}</MenuItem>
+                  <MenuItem value="credit">{t("credit")}</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            {(startDate ||
+              endDate ||
+              customer ||
+              paymentStatus ||
+              paymentMethod) && (
+              <Grid item xs={12} md={12}>
                 <Button
-                  fullWidth
                   variant="outlined"
                   onClick={() => {
                     setStartDate("");
                     setEndDate("");
+                    setCustomer("");
+                    setPaymentStatus("");
+                    setPaymentMethod("");
                     setPage(0);
                   }}
                 >
                   {t("clearFilters")}
                 </Button>
-              )}
-            </Grid>
+              </Grid>
+            )}
           </Grid>
         </CardContent>
       </Card>

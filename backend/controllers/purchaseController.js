@@ -4,7 +4,16 @@ import Stock from "../models/Stock.js";
 // Get all purchases
 export const getPurchases = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const {
+      search,
+      startDate,
+      endDate,
+      supplier,
+      paymentStatus,
+      paymentMethod,
+      page = 1,
+      limit = 10,
+    } = req.query;
     const query = {};
 
     if (search) {
@@ -12,6 +21,24 @@ export const getPurchases = async (req, res) => {
         { itemName: { $regex: search, $options: "i" } },
         { supplier: { $regex: search, $options: "i" } },
       ];
+    }
+
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) query.date.$lte = new Date(endDate);
+    }
+
+    if (supplier) {
+      query.supplier = { $regex: supplier, $options: "i" };
+    }
+
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus;
+    }
+
+    if (paymentMethod) {
+      query.paymentMethod = paymentMethod;
     }
 
     const purchases = await Purchase.find(query)

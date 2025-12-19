@@ -8,8 +8,6 @@ import stockRoutes from "./routes/stockRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
 import supplierRoutes from "./routes/supplierRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-import payableRoutes from "./routes/payableRoutes.js";
-import receivableRoutes from "./routes/receivableRoutes.js";
 
 dotenv.config();
 
@@ -32,8 +30,6 @@ app.use("/api/sales", salesRoutes);
 app.use("/api/stock", stockRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/suppliers", supplierRoutes);
-app.use("/api/payables", payableRoutes);
-app.use("/api/receivables", receivableRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
