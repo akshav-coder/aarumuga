@@ -29,6 +29,7 @@ import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import PeopleIcon from "@mui/icons-material/People";
 import BusinessIcon from "@mui/icons-material/Business";
+import PaymentIcon from "@mui/icons-material/Payment";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LanguageSwitcher from "../common/LanguageSwitcher";
@@ -81,6 +82,11 @@ function Layout({ children }) {
       text: getTranslation(language, "suppliers"),
       icon: <BusinessIcon />,
       path: "/suppliers",
+    },
+    {
+      text: getTranslation(language, "supplierPayments"),
+      icon: <PaymentIcon />,
+      path: "/supplier-payments",
     },
   ];
 

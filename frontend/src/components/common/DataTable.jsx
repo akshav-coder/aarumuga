@@ -26,6 +26,8 @@ function DataTable({
   onRowsPerPageChange,
   loading = false,
   renderActions,
+  onRowClick,
+  rowStyle,
 }) {
   const { t } = useTranslation();
 
@@ -130,10 +132,13 @@ function DataTable({
               <TableRow
                 key={row.id}
                 hover
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
                 sx={{
                   "&:nth-of-type(even)": {
                     backgroundColor: "rgba(0, 0, 0, 0.02)",
                   },
+                  ...(onRowClick && { cursor: "pointer" }),
+                  ...(rowStyle && rowStyle(row)),
                 }}
               >
                 {columns.map((column) => (

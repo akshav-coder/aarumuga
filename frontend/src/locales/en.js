@@ -165,6 +165,8 @@ export const en = {
   remainingAfterPayment: "Remaining After Payment",
   billsSelected: "Bills Selected",
   noBillsSelected: "No bills selected. Enter pay amount to auto-select bills.",
+  paymentDetails: "Payment Details",
+  totalAllocated: "Total Allocated",
   pleaseSelectItems: "Please select items to delete",
   bulkDeleteConfirm: "Are you sure you want to delete {count} item(s)?",
   bulkDeleteSuccess: "{count} item(s) deleted successfully",
