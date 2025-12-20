@@ -68,8 +68,10 @@ export const en = {
   purchaseCreated: "Purchase created successfully",
   purchaseUpdated: "Purchase updated successfully",
   deletePurchaseConfirm: "Are you sure you want to delete this purchase?",
-  searchPurchase: "Search by item name or supplier...",
+  searchPurchase: "Search by item name, supplier, or invoice number...",
   totalAmount: "Total Amount",
+  invoiceNo: "Invoice Number",
+  invoiceNoAlreadyExists: "Invoice number already exists. Please use a unique invoice number.",
 
   // Sales
   salesTitle: "Product Sales",

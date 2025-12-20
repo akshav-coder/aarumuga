@@ -7,6 +7,12 @@ const purchaseSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    invoiceNo: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
     itemName: {
       type: String,
       required: true,
@@ -76,6 +82,9 @@ purchaseSchema.pre("save", function (next) {
   }
   next();
 });
+
+// Create unique index on invoiceNo
+purchaseSchema.index({ invoiceNo: 1 }, { unique: true });
 
 const Purchase = mongoose.model("Purchase", purchaseSchema);
 

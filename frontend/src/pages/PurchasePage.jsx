@@ -143,6 +143,7 @@ function PurchasePage() {
       />
     ),
     date: dayjs(purchase.date).format("DD/MM/YYYY"),
+    invoiceNo: purchase.invoiceNo || "-",
     itemName: purchase.itemName,
     quantity: purchase.quantity,
     unit: purchase.unit,
@@ -171,6 +172,7 @@ function PurchasePage() {
       width: 50,
     },
     { id: "date", label: t("date") },
+    { id: "invoiceNo", label: t("invoiceNo") },
     { id: "itemName", label: t("itemName") },
     { id: "quantity", label: t("quantity") },
     { id: "unit", label: t("unit") },

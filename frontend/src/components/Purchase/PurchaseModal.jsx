@@ -28,6 +28,7 @@ function PurchaseModal({ open, onClose, purchase, onSuccess }) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     date: dayjs().format("YYYY-MM-DD"),
+    invoiceNo: "",
     quantity: "",
     rate: "",
     supplier: "",
@@ -44,6 +45,7 @@ function PurchaseModal({ open, onClose, purchase, onSuccess }) {
     if (purchase) {
       setFormData({
         date: dayjs(purchase.date).format("YYYY-MM-DD"),
+        invoiceNo: purchase.invoiceNo || "",
         quantity: purchase.quantity
           ? formatIndianNumber(purchase.quantity)
           : "",
@@ -54,6 +56,7 @@ function PurchaseModal({ open, onClose, purchase, onSuccess }) {
     } else {
       setFormData({
         date: dayjs().format("YYYY-MM-DD"),
+        invoiceNo: "",
         quantity: "",
         rate: "",
         supplier: "",
@@ -87,8 +90,9 @@ function PurchaseModal({ open, onClose, purchase, onSuccess }) {
   const handleSubmit = async () => {
     const quantity = parseFormattedNumber(formData.quantity);
     const rate = parseFormattedNumber(formData.rate);
+    const trimmedInvoiceNo = formData.invoiceNo?.trim() || "";
 
-    if (!quantity || !rate || !formData.supplier) {
+    if (!trimmedInvoiceNo || !quantity || !rate || !formData.supplier) {
       showToast(t("fillAllFields"), "error");
       return;
     }
@@ -104,6 +108,7 @@ function PurchaseModal({ open, onClose, purchase, onSuccess }) {
     try {
       const data = {
         date: formData.date,
+        invoiceNo: trimmedInvoiceNo,
         quantity: qtyNum,
         unit: "kg", // Always kg for Tamarind Paste
         rate: rateNum,
@@ -120,7 +125,14 @@ function PurchaseModal({ open, onClose, purchase, onSuccess }) {
       }
       onSuccess();
     } catch (error) {
-      showToast(error.data?.message || t("failedToSave"), "error");
+      const errorMessage = error.data?.message || t("failedToSave");
+      // Check if it's a duplicate invoice number error
+      if (errorMessage.includes("Invoice number already exists") || 
+          errorMessage.includes("invoice number already exists")) {
+        showToast(t("invoiceNoAlreadyExists"), "error");
+      } else {
+        showToast(errorMessage, "error");
+      }
     }
   };
 
@@ -143,6 +155,16 @@ function PurchaseModal({ open, onClose, purchase, onSuccess }) {
               value={formData.date}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
+              required
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label={t("invoiceNo")}
+              name="invoiceNo"
+              value={formData.invoiceNo}
+              onChange={handleChange}
               required
             />
           </Grid>

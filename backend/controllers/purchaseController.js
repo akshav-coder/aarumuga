@@ -20,6 +20,7 @@ export const getPurchases = async (req, res) => {
       query.$or = [
         { itemName: { $regex: search, $options: "i" } },
         { supplier: { $regex: search, $options: "i" } },
+        { invoiceNo: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -78,6 +79,7 @@ export const createPurchase = async (req, res) => {
   try {
     const {
       date,
+      invoiceNo,
       itemName = "Tamarind Paste",
       quantity,
       unit,
@@ -86,10 +88,28 @@ export const createPurchase = async (req, res) => {
       paymentMethod = "cash",
     } = req.body;
 
-    if (!quantity || !rate || !supplier) {
+    if (!invoiceNo || !quantity || !rate || !supplier) {
       return res
         .status(400)
-        .json({ message: "Quantity, rate, and supplier are required" });
+        .json({ message: "Invoice number, quantity, rate, and supplier are required" });
+    }
+
+    // Trim and validate invoice number
+    const trimmedInvoiceNo = invoiceNo.trim();
+    if (!trimmedInvoiceNo) {
+      return res
+        .status(400)
+        .json({ message: "Invoice number cannot be empty" });
+    }
+
+    // Check if invoice number already exists (case-insensitive)
+    const existingPurchase = await Purchase.findOne({ 
+      invoiceNo: { $regex: new RegExp(`^${trimmedInvoiceNo}$`, "i") }
+    });
+    if (existingPurchase) {
+      return res
+        .status(400)
+        .json({ message: "Invoice number already exists. Please use a unique invoice number." });
     }
 
     const totalAmount = quantity * rate;
@@ -99,6 +119,7 @@ export const createPurchase = async (req, res) => {
 
     const purchase = new Purchase({
       date: date || new Date(),
+      invoiceNo: trimmedInvoiceNo,
       itemName: "Tamarind Paste",
       quantity,
       unit: "kg", // Always kg for Tamarind Paste
@@ -121,6 +142,12 @@ export const createPurchase = async (req, res) => {
 
     res.status(201).json(savedPurchase);
   } catch (error) {
+    // Handle duplicate key error from MongoDB unique index
+    if (error.code === 11000 && error.keyPattern?.invoiceNo) {
+      return res
+        .status(400)
+        .json({ message: "Invoice number already exists. Please use a unique invoice number." });
+    }
     res.status(400).json({ message: error.message });
   }
 };
@@ -133,14 +160,40 @@ export const updatePurchase = async (req, res) => {
       return res.status(404).json({ message: "Purchase not found" });
     }
 
-    const { date, itemName, quantity, unit, rate, supplier, paymentMethod } =
+    const { date, invoiceNo, itemName, quantity, unit, rate, supplier, paymentMethod } =
       req.body;
     const oldQuantity = purchase.quantity;
     const oldItemName = purchase.itemName;
 
+    if (!invoiceNo) {
+      return res
+        .status(400)
+        .json({ message: "Invoice number is required" });
+    }
+
+    // Trim and validate invoice number
+    const trimmedInvoiceNo = invoiceNo.trim();
+    if (!trimmedInvoiceNo) {
+      return res
+        .status(400)
+        .json({ message: "Invoice number cannot be empty" });
+    }
+
+    // Check if invoice number already exists for another purchase (case-insensitive)
+    const existingPurchase = await Purchase.findOne({ 
+      invoiceNo: { $regex: new RegExp(`^${trimmedInvoiceNo}$`, "i") },
+      _id: { $ne: req.params.id } // Exclude current purchase
+    });
+    if (existingPurchase) {
+      return res
+        .status(400)
+        .json({ message: "Invoice number already exists. Please use a unique invoice number." });
+    }
+
     const totalAmount = quantity * rate;
 
     purchase.date = date || purchase.date;
+    purchase.invoiceNo = trimmedInvoiceNo;
     purchase.itemName = "Tamarind Paste";
     purchase.quantity = quantity;
     purchase.unit = "kg"; // Always kg for Tamarind Paste
@@ -176,6 +229,12 @@ export const updatePurchase = async (req, res) => {
 
     res.json(updatedPurchase);
   } catch (error) {
+    // Handle duplicate key error from MongoDB unique index
+    if (error.code === 11000 && error.keyPattern?.invoiceNo) {
+      return res
+        .status(400)
+        .json({ message: "Invoice number already exists. Please use a unique invoice number." });
+    }
     res.status(400).json({ message: error.message });
   }
 };
