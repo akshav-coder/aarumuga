@@ -9,6 +9,7 @@ import StockPage from "./pages/StockPage";
 import CustomerPage from "./pages/CustomerPage";
 import SupplierPage from "./pages/SupplierPage";
 import SupplierPaymentPage from "./pages/SupplierPaymentPage";
+import SupplierPaymentHistoryPage from "./pages/SupplierPaymentHistoryPage";
 import { useAuth } from "./contexts/AuthContext";
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/customers" element={<CustomerPage />} />
                 <Route path="/suppliers" element={<SupplierPage />} />
                 <Route path="/supplier-payments" element={<SupplierPaymentPage />} />
+                <Route path="/supplier-payment-history" element={<SupplierPaymentHistoryPage />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

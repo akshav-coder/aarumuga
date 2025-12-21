@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -22,6 +23,7 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import HistoryIcon from "@mui/icons-material/History";
 import { useGetSuppliersQuery } from "../store/api/supplierApi";
 import {
   useGetSupplierOutstandingPurchasesQuery,
@@ -33,6 +35,7 @@ import dayjs from "dayjs";
 
 function SupplierPaymentPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [paymentDate, setPaymentDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -198,6 +201,15 @@ function SupplierPaymentPage() {
             {t("supplierPaymentsSubtitle")}
           </Typography>
         </Box>
+        <Button
+          variant="outlined"
+          startIcon={<HistoryIcon />}
+          onClick={() => navigate("/supplier-payment-history")}
+          size="large"
+          sx={{ borderColor: "#667eea", color: "#667eea" }}
+        >
+          {t("supplierPaymentHistory")}
+        </Button>
       </Box>
 
       <Grid container spacing={3}>

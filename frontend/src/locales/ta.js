@@ -150,6 +150,10 @@ export const ta = {
   totalPayment: "மொத்த கட்டணம்",
   supplierPayments: "சப்ளையர் கட்டணங்கள்",
   supplierPaymentsSubtitle: "சப்ளையர் கட்டணங்களை பதிவு செய்து நிர்வகிக்கவும்",
+  supplierPaymentHistory: "சப்ளையர் கட்டண வரலாறு",
+  supplierPaymentHistorySubtitle: "சப்ளையர் கட்டண பதிவுகளைக் காண்க மற்றும் நிர்வகிக்கவும்",
+  totalPayments: "மொத்த கட்டணங்கள்",
+  viewDetails: "விவரங்களைக் காண்க",
   pleaseSelectSupplier: "தயவுசெய்து சப்ளையரைத் தேர்ந்தெடுக்கவும்",
   pleaseSelectPurchase: "தயவுசெய்து கொள்முதலைத் தேர்ந்தெடுக்கவும்",
   pleaseSelectAtLeastOnePurchase:
@@ -170,6 +174,7 @@ export const ta = {
   noBillsSelected: "பில்கள் தேர்ந்தெடுக்கப்படவில்லை. பில்களை தானாகத் தேர்ந்தெடுக்க செலுத்த வேண்டிய தொகையை உள்ளிடவும்.",
   paymentDetails: "கட்டண விவரங்கள்",
   totalAllocated: "மொத்த ஒதுக்கப்பட்டது",
+  allocatedAmount: "ஒதுக்கப்பட்ட தொகை",
   pleaseSelectItems: "நீக்க நீங்கள் உருப்படிகளைத் தேர்ந்தெடுக்கவும்",
   bulkDeleteConfirm: "{count} உருப்படி(களை) நீக்க விரும்புகிறீர்களா?",
   bulkDeleteSuccess: "{count} உருப்படி(கள்) வெற்றிகரமாக நீக்கப்பட்டது",

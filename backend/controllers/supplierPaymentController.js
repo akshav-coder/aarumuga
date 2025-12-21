@@ -289,9 +289,11 @@ export const deletePayment = async (req, res) => {
     for (const allocation of payment.allocations) {
       const purchase = await Purchase.findById(allocation.purchaseId);
       if (purchase) {
-        purchase.paidAmount = Math.max(0, purchase.paidAmount - allocation.amount);
-        purchase.outstandingAmount =
-          purchase.totalAmount - purchase.paidAmount;
+        purchase.paidAmount = Math.max(
+          0,
+          purchase.paidAmount - allocation.amount
+        );
+        purchase.outstandingAmount = purchase.totalAmount - purchase.paidAmount;
 
         if (purchase.paidAmount === 0) {
           purchase.paymentStatus = "unpaid";
